@@ -48,6 +48,8 @@ def load_signals(data_dir: Path) -> SignalIndex:
     index = SignalIndex(by_id=signals, by_email={}, by_phone={}, by_name={})
     _load_memberships(data_dir / "tarifas.csv", signals)
     _load_payments(data_dir / "pagos.csv", index)
+    _load_payments(data_dir / "pagos_getafe.csv", index)
+    _load_payments(data_dir / "pagos_parla.csv", index)
     _load_payments(data_dir / "pagos_las_rosas.csv", index)
     _load_cancellations(data_dir / "cancelaciones.csv", signals)
     return index
