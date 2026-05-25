@@ -20,6 +20,7 @@ from client_profiles import add_note, get_profile, upsert_client
 from .config import ROOT, load_settings
 from .injuries import attach_injuries, load_beta_injuries, load_db_injuries, load_deleted_db_injuries, load_injuries
 from .inactivity import load_inactive_members_cache, refresh_inactive_members
+from . import ghl as ghl_mod
 
 _LAST_PROFILE_SEED_SIGNATURE = None
 
@@ -416,6 +417,21 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/inactive-members":
             self._send_json(load_inactive_members_cache())
+            return
+        if parsed.path == "/api/ghl/open":
+            from urllib.parse import parse_qs
+            phone = parse_qs(parsed.query).get("phone", [""])[0]
+            try:
+                result = ghl_mod.resolve_conversation(phone)
+            except Exception as exc:
+                result = {"ok": False, "error": f"Error inesperado: {exc}"}
+            if result.get("ok") and result.get("conversation_url"):
+                self.send_response(HTTPStatus.FOUND)
+                self.send_header("Location", result["conversation_url"])
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                return
+            self._send_json(result, status=HTTPStatus.NOT_FOUND if "no encontrado" in str(result.get("error", "")).lower() else HTTPStatus.BAD_GATEWAY)
             return
         if parsed.path.startswith("/reports/"):
             self._send_report(parsed.path.removeprefix("/reports/"))
@@ -913,6 +929,8 @@ INDEX_HTML = r"""<!doctype html>
     .risk.Al.dia { background: #eaf4e1; color: var(--green-dark); }
     .name { font-weight: 760; white-space: nowrap; }
     .contact { color: var(--muted); line-height: 1.45; min-width: 170px; overflow-wrap: anywhere; }
+    .ghl-btn { display: inline-block; padding: 1px 7px; margin-left: 6px; font-size: 11px; font-weight: 700; line-height: 1.4; color: var(--green-dark); background: rgba(135,177,95,.14); border: 1px solid rgba(135,177,95,.4); border-radius: 999px; text-decoration: none; white-space: nowrap; vertical-align: 1px; }
+    .ghl-btn:hover { background: var(--green); color: #101510; border-color: var(--green); }
     .reasons { min-width: 280px; max-width: 430px; line-height: 1.45; }
     .muted { color: var(--muted); }
     .empty { padding: 36px; text-align: center; color: var(--muted); }
@@ -2329,7 +2347,7 @@ INDEX_HTML = r"""<!doctype html>
         <tr>
           <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><div class="muted">${safe(daysText(item.days_remaining))}</div></td>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}</div></td>
+          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div></td>
           <td><div class="name">${safe(item.label || '')}</div><div class="muted">${safe(item.description || '')}</div></td>
           <td>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</td>
           <td class="reasons">${safe(item.latest_note || '')}</td>
@@ -2363,7 +2381,7 @@ INDEX_HTML = r"""<!doctype html>
         <tr>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
           <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><div class="muted">${safe(daysText(item.days_remaining))}</div></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><span>${safe(item.phone || '')}</span><span>${safe(item.label || 'Sin etiqueta')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
+          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><span>${safe(item.phone || '')}</span><span>${safe(item.label || 'Sin etiqueta')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
           <td>${safe(item.type || '')}</td>
           <td><span class="risk ${item.label ? 'Bajo' : 'Sin.fecha'}">${item.label ? 'Sí' : 'No'}</span><div class="muted">${safe(item.label || 'Sin etiqueta')}</div></td>
           <td><div class="name">${safe(item.description || '')}</div></td>
@@ -2393,7 +2411,7 @@ INDEX_HTML = r"""<!doctype html>
         <tr>
           <td><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(inactiveClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}<br>${safe(item.email || '')}</div></td>
+          <td><button class="client-link" type="button" data-client='${clientDataAttr(inactiveClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${ghlButton(item.phone)}<br>${safe(item.email || '')}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
           <td>${safe(item.membership_name || 'Sin datos')}<div class="muted">${item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos'}</div></td>
           <td>${item.weekly_average === null || item.weekly_average === undefined ? '—' : safe(item.weekly_average)}</td>
@@ -2427,7 +2445,7 @@ INDEX_HTML = r"""<!doctype html>
         <tr>
           <td>${safe(formatDateEs(item.updated_at) || '')}</td>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}</div></td>
+          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div></td>
           <td><div class="name">${safe(item.label || '')}</div><div class="muted">${safe(item.description || '')}</div></td>
           <td class="reasons">${safe(item.latest_note || '')}</td>
         </tr>
@@ -2438,6 +2456,11 @@ INDEX_HTML = r"""<!doctype html>
       return String(value ?? '').replace(/[&<>"']/g, (char) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
       }[char]));
+    }
+    function ghlButton(phone) {
+      const p = String(phone || '').trim();
+      if (!p) return '';
+      return ` <a class="ghl-btn" href="/api/ghl/open?phone=${encodeURIComponent(p)}" target="_blank" rel="noopener" title="Abrir conversación en GHL">↗ GHL</a>`;
     }
     function riskClass(value) {
       return safe(value).replace(/\s+/g, ' ');
