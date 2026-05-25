@@ -12,6 +12,7 @@ from .scoring import _nested
 
 CACHE_PATH = ROOT / "reports" / "inactive_members.json"
 THRESHOLD_DAYS = 7
+BONO_VALID_MONTHS = 4
 
 
 def load_inactive_members_cache(path: Path = CACHE_PATH) -> dict:
@@ -78,6 +79,8 @@ def _inactive_rows_for_center(clients: List[Dict[str, Any]], center: CenterConfi
             phone=str(client.get("mobile_number") or client.get("mobile") or ""),
             name=name,
         )
+        if _expired_class_pack(signal):
+            continue
         out.append({
             "id": client_id,
             "name": name,
@@ -134,7 +137,36 @@ def _sort_days(item: Dict[str, Any]) -> int:
 def _membership_active(signal: LocalSignals) -> bool:
     if not signal.last_membership_payment_date:
         return False
+    if _is_class_pack(signal.membership_name):
+        return date.today() <= _add_months(signal.last_membership_payment_date, BONO_VALID_MONTHS)
     return (date.today() - signal.last_membership_payment_date).days <= 31
+
+
+def _expired_class_pack(signal: LocalSignals) -> bool:
+    if not _is_class_pack(signal.membership_name):
+        return False
+    if not signal.last_membership_payment_date:
+        return False
+    return date.today() > _add_months(signal.last_membership_payment_date, BONO_VALID_MONTHS)
+
+
+def _is_class_pack(membership_name: str) -> bool:
+    normalized = " ".join(str(membership_name or "").lower().split())
+    return "clases" in normalized and (
+        normalized.startswith("bono")
+        or normalized.startswith("9 ")
+        or normalized.startswith("10 ")
+        or normalized.startswith("13 ")
+        or normalized.startswith("26 ")
+    )
+
+
+def _add_months(value: date, months: int) -> date:
+    month_index = value.month - 1 + months
+    year = value.year + month_index // 12
+    month = month_index % 12 + 1
+    days_in_month = [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    return date(year, month, min(value.day, days_in_month[month - 1]))
 
 
 def _bucket(days: Optional[int]) -> str:

@@ -174,7 +174,7 @@ def _membership_from_payment(row: dict) -> str:
     value = re.sub(r"<[^>]+>", " ", concept).strip()
     value = re.sub(r"\s+", " ", value)
     match = re.match(
-        r"^(CrossFit Academy 2 dias|CrossFit Academy 2 días|CrossFit Academy|Academy(?: 2D)?|Congelacion|Congelación|S|M|L|XL|Tarifa S|Tarifa M|Tarifa L|Tarifa XL|9 clases|13 clases|26 clases)\b",
+        r"^(CrossFit Academy 2 dias|CrossFit Academy 2 días|CrossFit Academy|Academy(?: 2D)?|Congelacion|Congelación|S|M|L|XL|Tarifa S|Tarifa M|Tarifa L|Tarifa XL|(?:Bono\s+)?\d+\s+clases)\b",
         value,
         re.I,
     )
