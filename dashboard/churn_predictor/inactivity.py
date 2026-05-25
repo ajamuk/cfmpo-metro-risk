@@ -152,13 +152,7 @@ def _expired_class_pack(signal: LocalSignals) -> bool:
 
 def _is_class_pack(membership_name: str) -> bool:
     normalized = " ".join(str(membership_name or "").lower().split())
-    return "clases" in normalized and (
-        normalized.startswith("bono")
-        or normalized.startswith("9 ")
-        or normalized.startswith("10 ")
-        or normalized.startswith("13 ")
-        or normalized.startswith("26 ")
-    )
+    return normalized in {"bono 10 clases", "bono 10 clases crossfit academy"}
 
 
 def _add_months(value: date, months: int) -> date:
