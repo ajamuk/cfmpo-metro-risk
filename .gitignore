@@ -1,0 +1,29 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*service-account*.json
+credentials*.json
+config.json
+.aimharder_tokens.json
+
+# runtime data
+*.sqlite
+*.sqlite-*
+*.db
+*.jsonl
+reports/
+logs/
+state/
+data/*.csv
+exports/
+
+# backups/cache
+*.bak*
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+.DS_Store

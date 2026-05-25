@@ -1,0 +1,17 @@
+[Unit]
+Description=CrossFit MetroPolitano churn dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/crossfit-metropolitano-dashboard
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/crossfit-metropolitano-dashboard/dashboard_server.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

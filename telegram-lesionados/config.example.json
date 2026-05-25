@@ -1,0 +1,12 @@
+{
+  "sqliteDb": "/opt/telegram-lesionados/state/lesionados.sqlite",
+  "localJsonl": "/opt/telegram-lesionados/state/registros.jsonl",
+  "lesionadosSpreadsheetId": "GOOGLE_SHEET_ID",
+  "sourceLesionadosSpreadsheetId": "GOOGLE_SHEET_ID",
+  "googleServiceAccount": "/path/to/google-service-account.json",
+  "betaSheets": {
+    "Getafe": "Beta Getafe",
+    "Parla": "Beta Parla",
+    "Las Rosas": "Beta Las Rosas"
+  }
+}
