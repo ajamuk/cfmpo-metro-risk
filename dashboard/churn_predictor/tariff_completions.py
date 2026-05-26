@@ -96,6 +96,13 @@ def refresh_tariff_completions() -> dict[str, Any]:
         )
 
     rows.sort(key=lambda row: (_date_sort(row.get("cycle_start")), _norm(row.get("name"))), reverse=True)
+    if not rows:
+        cached = load_tariff_completions_cache()
+        cached_rows = cached.get("rows") or []
+        if cached_rows:
+            cached["ok"] = True
+            cached["errors"] = list(dict.fromkeys([*errors, "No se sobrescribe la cache anterior porque no hay datos locales de pagos disponibles."]))
+            return cached
     payload = _payload(rows, errors, False)
     _write(payload)
     return payload
