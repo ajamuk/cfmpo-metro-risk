@@ -1863,6 +1863,52 @@ INDEX_HTML = r"""<!doctype html>
     html body #injuriesPanel .mobile-meta .risk{flex:0 0 auto!important;font-weight:950!important;font-size:10.8px!important;line-height:1.05!important}
   }
 </style>
+
+<style id="injuries-plain-name-no-pill-final-20260526">
+  html body #injuriesPanel .client-link,
+  html body #injuriesPanel button.client-link{
+    appearance:none!important;
+    -webkit-appearance:none!important;
+    display:inline!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:var(--cf-text,#EFE9E9)!important;
+    font:inherit!important;
+    font-weight:950!important;
+    line-height:inherit!important;
+    text-align:left!important;
+    text-decoration:none!important;
+    cursor:pointer!important;
+  }
+  html body #injuriesPanel .client-link:hover,
+  html body #injuriesPanel button.client-link:hover{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    color:var(--cf-green2,#A6C977)!important;
+    text-decoration:none!important;
+  }
+  @media(max-width:760px){
+    html body #injuriesPanel .client-link,
+    html body #injuriesPanel button.client-link{
+      display:block!important;
+      white-space:nowrap!important;
+      overflow:hidden!important;
+      text-overflow:ellipsis!important;
+      font-size:15px!important;
+      line-height:1.08!important;
+      margin:0 0 5px!important;
+    }
+  }
+</style>
   <div class="shell">
     <aside>
       <div class="brand">
