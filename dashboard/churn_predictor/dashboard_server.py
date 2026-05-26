@@ -1459,6 +1459,38 @@ INDEX_HTML = r"""<!doctype html>
   body #injuriesPanel th button,body #injuriesPanel th button:hover,body #injuriesPanel th button:focus-visible{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-decoration:none!important;outline:0!important}
 </style>
 
+<style id="injuries-plain-data-no-pills-20260526">
+  body #injuriesPanel .risk,
+  body #injuriesPanel .mobile-meta .risk,
+  body #injuriesPanel td:nth-child(2) .risk{
+    display:inline!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    line-height:inherit!important;
+    font-size:inherit!important;
+    white-space:normal!important;
+  }
+  body #injuriesPanel .risk.Bajo,
+  body #injuriesPanel .risk.Al.dia{color:var(--cf-green2,#A6C977)!important}
+  body #injuriesPanel .risk.Medio,
+  body #injuriesPanel .risk.Hoy{color:#FFD18A!important}
+  body #injuriesPanel .risk.Alto,
+  body #injuriesPanel .risk.Vencido{color:#FFB1A8!important}
+  body #injuriesPanel .risk.Proximos{color:#ABC8FF!important}
+  body #injuriesPanel .risk.Sin.fecha{color:rgba(195,191,190,.86)!important}
+  @media(max-width:760px){
+    body #injuriesPanel .mobile-meta .risk{flex:0 0 auto!important;font-weight:950!important;font-size:10.8px!important;line-height:1.05!important}
+  }
+</style>
+
 
 <style id="mobile-ux-review-20260525">
   @media(max-width:760px){
@@ -1797,6 +1829,38 @@ INDEX_HTML = r"""<!doctype html>
     body #inactivePanel .mobile-desc{font-size:12px!important;line-height:1.18!important;color:rgba(239,233,233,.88)!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
     body #inactivePanel .mobile-note{font-size:10.8px!important;line-height:1.12!important;color:rgba(195,191,190,.76)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0!important}
     body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:10px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
+  }
+</style>
+
+<style id="injuries-plain-data-no-pills-final-20260526">
+  html body #injuriesPanel .risk,
+  html body #injuriesPanel .mobile-meta .risk,
+  html body #injuriesPanel td:nth-child(2) .risk{
+    display:inline!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    line-height:inherit!important;
+    font-size:inherit!important;
+    white-space:normal!important;
+  }
+  html body #injuriesPanel .risk.Bajo,
+  html body #injuriesPanel .risk.Al.dia{color:var(--cf-green2,#A6C977)!important}
+  html body #injuriesPanel .risk.Medio,
+  html body #injuriesPanel .risk.Hoy{color:#FFD18A!important}
+  html body #injuriesPanel .risk.Alto,
+  html body #injuriesPanel .risk.Vencido{color:#FFB1A8!important}
+  html body #injuriesPanel .risk.Proximos{color:#ABC8FF!important}
+  html body #injuriesPanel .risk.Sin.fecha{color:rgba(195,191,190,.86)!important}
+  @media(max-width:760px){
+    html body #injuriesPanel .mobile-meta .risk{flex:0 0 auto!important;font-weight:950!important;font-size:10.8px!important;line-height:1.05!important}
   }
 </style>
   <div class="shell">
