@@ -176,7 +176,7 @@ def _membership_from_payment(row: dict) -> str:
     value = re.sub(r"<[^>]+>", " ", concept).strip()
     value = re.sub(r"\s+", " ", value)
     match = re.match(
-        r"^(CrossFit Academy 2 dias|CrossFit Academy 2 días|CrossFit Academy|Academy(?: 2D)?|Congelacion|Congelación|S|M|L|XL|Tarifa S|Tarifa M|Tarifa L|Tarifa XL|Bono 10 clases CrossFit Academy|Bono 10 clases)\b",
+        r"^(Wellhub|Gympass|CrossFit Academy 2 dias|CrossFit Academy 2 días|CrossFit Academy|Academy(?: 2D)?|Congelacion|Congelación|S|M|L|XL|Tarifa S|Tarifa M|Tarifa L|Tarifa XL|Bono 10 clases CrossFit Academy|Bono 10 clases)\b",
         value,
         re.I,
     )
@@ -184,6 +184,8 @@ def _membership_from_payment(row: dict) -> str:
         return ""
     membership = match.group(1)
     lowered = membership.lower()
+    if lowered in {"wellhub", "gympass"}:
+        return "Wellhub"
     if lowered == "bono 10 clases crossfit academy":
         return "Bono 10 clases CrossFit Academy"
     if lowered == "bono 10 clases":

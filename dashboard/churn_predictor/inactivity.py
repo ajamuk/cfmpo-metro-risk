@@ -79,6 +79,8 @@ def _inactive_rows_for_center(clients: List[Dict[str, Any]], center: CenterConfi
             phone=str(client.get("mobile_number") or client.get("mobile") or ""),
             name=name,
         )
+        if _excluded_from_inactivity(signal):
+            continue
         if _expired_class_pack(signal):
             continue
         out.append({
@@ -142,6 +144,10 @@ def _membership_active(signal: LocalSignals) -> bool:
     return (date.today() - signal.last_membership_payment_date).days <= 31
 
 
+def _excluded_from_inactivity(signal: LocalSignals) -> bool:
+    return _is_wellhub(signal.membership_name)
+
+
 def _expired_class_pack(signal: LocalSignals) -> bool:
     if not _is_class_pack(signal.membership_name):
         return False
@@ -153,6 +159,11 @@ def _expired_class_pack(signal: LocalSignals) -> bool:
 def _is_class_pack(membership_name: str) -> bool:
     normalized = " ".join(str(membership_name or "").lower().split())
     return normalized in {"bono 10 clases", "bono 10 clases crossfit academy"}
+
+
+def _is_wellhub(membership_name: str) -> bool:
+    normalized = " ".join(str(membership_name or "").lower().split())
+    return "wellhub" in normalized or "gympass" in normalized
 
 
 def _add_months(value: date, months: int) -> date:

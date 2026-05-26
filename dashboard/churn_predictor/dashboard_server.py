@@ -2007,7 +2007,7 @@ INDEX_HTML = r"""<!doctype html>
             <div class="rule-block"><strong>Tarifa</strong><p>Academy 2D +20. Academy +15. S o 9 clases +12. M o 13 clases +6. L y XL +0.</p></div>
             <div class="rule-block"><strong>Uso semanal</strong><p>Si existe media semanal: +18 por menos de 0,5 reservas/semana. +10 por menos de 1 reserva/semana.</p></div>
             <div class="rule-block"><strong>Pagos fallidos</strong><p>+10 por pago fallido reciente, con un maximo de +25 puntos.</p></div>
-            <div class="rule-block"><strong>Filtro previo</strong><p>Solo entran socios con tarifa activa detectada en el CSV de pagos del mes y cruzados con AimHarder.</p></div>
+            <div class="rule-block"><strong>Filtro previo</strong><p>Solo entran socios con tarifa activa detectada en el CSV de pagos del mes y cruzados con AimHarder. Wellhub/Gympass queda excluido de este seguimiento.</p></div>
           </div>
         </div>
       </section>
