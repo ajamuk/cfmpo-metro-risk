@@ -2763,7 +2763,7 @@ INDEX_HTML = r"""<!doctype html>
     function ghlButton(phone) {
       const p = String(phone || '').trim();
       if (!p) return '';
-      return ` <a class="ghl-btn" href="/api/ghl/open?phone=${encodeURIComponent(p)}" target="_blank" rel="noopener" title="Abrir conversación en GHL">↗ GHL</a>`;
+      return ` <a class="ghl-btn" href="api/ghl/open?phone=${encodeURIComponent(p)}" target="_blank" rel="noopener" title="Abrir conversación en GHL">↗ GHL</a>`;
     }
     function riskClass(value) {
       return safe(value).replace(/\s+/g, ' ');
