@@ -23,6 +23,7 @@ EXCLUDED_INACTIVITY_NAMES = {
     "pedro miguel gomez nunez",
     "carla panadero",
     "jorge escaffi rodriguez",
+    "nieves gonzalez siles",
     "sofia merchan arroyo",
 }
 EXCLUDED_INACTIVITY_EMAILS = {
