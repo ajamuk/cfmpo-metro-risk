@@ -20,6 +20,7 @@ from client_profiles import add_note, get_profile, upsert_client
 from .config import ROOT, load_settings
 from .injuries import attach_injuries, load_beta_injuries, load_db_injuries, load_deleted_db_injuries, load_injuries
 from .inactivity import load_inactive_members_cache, refresh_inactive_members
+from .tariff_completions import load_tariff_completions_cache, refresh_tariff_completions
 
 _LAST_PROFILE_SEED_SIGNATURE = None
 
@@ -67,6 +68,7 @@ def dashboard_payload() -> dict:
         if item.get("status") in {"Vencido", "Hoy", "Proximos 7 dias"}
     ]
     inactive_members = load_inactive_members_cache()
+    tariff_completions = load_tariff_completions_cache()
     return {
         "generated_at": report.generated_at,
         "report_file": report.path.name if report.path else "",
@@ -80,6 +82,11 @@ def dashboard_payload() -> dict:
         "inactive_members_threshold_days": inactive_members.get("threshold_days", 7),
         "inactive_members_kpis": inactive_members.get("kpis", {}),
         "inactive_members_centers": inactive_members.get("centers", {}),
+        "tariff_completions": tariff_completions.get("rows", []),
+        "tariff_completions_generated_at": tariff_completions.get("generated_at", ""),
+        "tariff_completions_errors": tariff_completions.get("errors", []),
+        "tariff_completions_kpis": tariff_completions.get("kpis", {}),
+        "tariff_completions_history_available": tariff_completions.get("history_available", False),
         "injury_centers": {
             "Getafe": len([item for item in injuries if item.get("center") == "Getafe"]),
             "Parla": len([item for item in injuries if item.get("center") == "Parla"]),
@@ -417,6 +424,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/inactive-members":
             self._send_json(load_inactive_members_cache())
             return
+        if parsed.path == "/api/tariff-completions":
+            self._send_json(load_tariff_completions_cache())
+            return
         if parsed.path.startswith("/reports/"):
             self._send_report(parsed.path.removeprefix("/reports/"))
             return
@@ -430,6 +440,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if parsed_path == "/api/inactive-refresh":
             try:
                 self._send_json(refresh_inactive_members())
+            except Exception as exc:
+                self._send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
+            return
+        if parsed_path == "/api/tariff-completions-refresh":
+            try:
+                self._send_json(refresh_tariff_completions())
             except Exception as exc:
                 self._send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
             return
@@ -1959,6 +1975,12 @@ INDEX_HTML = r"""<!doctype html>
             <button type="button" data-tab="inactive">7+ días sin venir</button>
           </div>
         </div>
+        <div class="nav-group tariffs-group">
+          <div class="nav-group-label">Tarifas</div>
+          <div class="tabs" role="tablist" aria-label="Tarifas">
+            <button type="button" data-tab="tariffs">Tarifas completadas</button>
+          </div>
+        </div>
         <div class="nav-group risk-group">
           <div class="nav-group-label">Riesgo de bajas</div>
           <div class="tabs" role="tablist" aria-label="Riesgo de bajas">
@@ -2131,6 +2153,38 @@ INDEX_HTML = r"""<!doctype html>
         </section>
       </section>
 
+      <section class="tab-panel" id="tariffsPanel" hidden>
+        <header class="panel-head risk-head">
+          <div><span>Tarifas</span><h2>Tarifas completadas · Parla</h2></div>
+          <p>Listado inicial de socios de Parla con tarifas limitadas detectadas. Por ahora no envía avisos: solo muestra el estado del cálculo.</p>
+        </header>
+        <section class="toolbar">
+          <input class="search" id="tariffSearch" type="search" placeholder="Buscar por socio, teléfono, email o tarifa">
+          <button class="button primary" id="tariffRefreshBtn" type="button">↻ Actualizar tarifas</button>
+          <button class="button" type="button" data-clear="tariffs">Limpiar búsqueda</button>
+          <div class="muted" id="tariffCountLabel">0 visibles</div>
+        </section>
+        <div class="warn" id="tariffMeta">Pendiente de actualizar.</div>
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><button type="button" data-tariff-sort="name">Socio</button></th>
+                <th><button type="button" data-tariff-sort="membership_name">Tarifa</button></th>
+                <th><button type="button" data-tariff-sort="cycle_start">Inicio ciclo</button></th>
+                <th><button type="button" data-tariff-sort="contracted_classes">Contratadas</button></th>
+                <th><button type="button" data-tariff-sort="consumed_classes">Consumidas</button></th>
+                <th><button type="button" data-tariff-sort="remaining_classes">Restantes</button></th>
+                <th><button type="button" data-tariff-sort="last_class_at">Última clase</button></th>
+                <th><button type="button" data-tariff-sort="status">Estado</button></th>
+              </tr>
+            </thead>
+            <tbody id="tariffRows"></tbody>
+          </table>
+          <div class="empty" id="tariffEmpty" hidden>No hay tarifas con esos filtros.</div>
+        </section>
+      </section>
+
       <section class="tab-panel" id="deletedPanel" hidden>
         <header class="panel-head injury-head">
           <div><span>Lesionados</span><h2>Registro de curados</h2></div>
@@ -2292,6 +2346,12 @@ INDEX_HTML = r"""<!doctype html>
       inactiveMembers: [],
       inactiveGeneratedAt: '',
       inactiveErrors: [],
+      tariffCompletions: [],
+      tariffGeneratedAt: '',
+      tariffErrors: [],
+      tariffQuery: '',
+      tariffSortKey: 'cycle_start',
+      tariffSortDir: 'desc',
       inactiveCenter: 'Getafe',
       inactiveBucket: 'Todos',
       inactiveQuery: '',
@@ -2328,6 +2388,9 @@ INDEX_HTML = r"""<!doctype html>
       state.inactiveMembers = data.inactive_members || [];
       state.inactiveGeneratedAt = data.inactive_members_generated_at || '';
       state.inactiveErrors = data.inactive_members_errors || [];
+      state.tariffCompletions = data.tariff_completions || [];
+      state.tariffGeneratedAt = data.tariff_completions_generated_at || '';
+      state.tariffErrors = data.tariff_completions_errors || [];
       state.injuries = data.injuries_app || data.injuries || [];
       state.deletedInjuries = data.deleted_injuries || [];
       $('subtitle').textContent = data.generated_at
@@ -2354,6 +2417,7 @@ INDEX_HTML = r"""<!doctype html>
       renderPending();
       renderInjuries();
       renderInactive();
+      renderTariffs();
       renderDeleted();
     }
 
@@ -2620,6 +2684,39 @@ INDEX_HTML = r"""<!doctype html>
       return 'Bajo';
     }
 
+    function renderTariffs() {
+      const query = state.tariffQuery.trim().toLowerCase();
+      const filtered = state.tariffCompletions.filter((item) => {
+        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.status}`.toLowerCase();
+        return !query || haystack.includes(query);
+      }).sort(compareTariffs);
+      updateSortHeaders('[data-tariff-sort]', state.tariffSortKey, state.tariffSortDir);
+      $('tariffCountLabel').textContent = `${filtered.length} visibles`;
+      $('tariffEmpty').hidden = filtered.length !== 0;
+      const meta = state.tariffGeneratedAt ? `Última actualización: ${state.tariffGeneratedAt}` : 'Pendiente de actualizar desde AimHarder.';
+      const errors = state.tariffErrors.length ? ` · ${state.tariffErrors.join(' | ')}` : '';
+      $('tariffMeta').textContent = `${meta}${errors}`;
+      $('tariffRows').innerHTML = filtered.map((item) => {
+        const clientData = clientDataAttr(tariffClient(item));
+        const consumed = item.consumed_classes === null || item.consumed_classes === undefined ? 'Pendiente' : item.consumed_classes;
+        const remaining = item.remaining_classes === null || item.remaining_classes === undefined ? '—' : item.remaining_classes;
+        return `
+        <tr>
+          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div></td>
+          <td><div class="name">${safe(item.membership_name || 'Sin datos')}</div></td>
+          <td>${safe(formatDateEs(item.cycle_start) || 'Sin datos')}</td>
+          <td>${safe(item.contracted_classes || '—')}</td>
+          <td>${safe(consumed)}</td>
+          <td>${safe(remaining)}</td>
+          <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
+          <td><span class="risk ${item.consumed_classes === null || item.consumed_classes === undefined ? 'Sin.fecha' : (item.remaining_classes <= 0 ? 'Alto' : 'Bajo')}">${safe(item.status || '')}</span><div class="muted">solo listado, sin avisos</div></td>
+        </tr>`;
+      }).join('');
+    }
+    function tariffClient(item) {
+      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || 'Parla', external_id: item.id || '', source: 'tarifas-completadas' };
+    }
+
     function renderDeleted() {
       const query = state.deletedQuery.trim().toLowerCase();
       const filtered = state.deletedInjuries.filter((item) => {
@@ -2679,6 +2776,17 @@ INDEX_HTML = r"""<!doctype html>
     function noteMeta(note) {
       return [formatDateOnlyEs(note.created_at), note.author || ''].filter(Boolean).join(' · ');
     }
+    function compareTariffs(a, b) {
+      const dir = state.tariffSortDir === 'asc' ? 1 : -1;
+      const key = state.tariffSortKey;
+      if (['contracted_classes', 'consumed_classes', 'remaining_classes'].includes(key)) {
+        const av = a[key] === null || a[key] === undefined || a[key] === '' ? -1 : Number(a[key]);
+        const bv = b[key] === null || b[key] === undefined || b[key] === '' ? -1 : Number(b[key]);
+        return (av - bv) * dir || textCompare(a.name, b.name, dir);
+      }
+      if (['cycle_start', 'last_class_at'].includes(key)) return dateCompare(a[key], b[key], dir) || textCompare(a.name, b.name, dir);
+      return textCompare(a[key], b[key], dir) || textCompare(a.name, b.name, dir);
+    }
     function compareInactive(a, b) {
       const dir = state.inactiveSortDir === 'asc' ? 1 : -1;
       const key = state.inactiveSortKey;
@@ -2730,7 +2838,7 @@ INDEX_HTML = r"""<!doctype html>
     }
     function updateSortHeaders(selector, activeKey, activeDir) {
       document.querySelectorAll(selector).forEach((button) => {
-        const key = button.dataset.sort || button.dataset.injurySort;
+        const key = button.dataset.sort || button.dataset.injurySort || button.dataset.inactiveSort || button.dataset.tariffSort || button.dataset.pendingSort || button.dataset.deletedSort;
         button.classList.toggle('active', key === activeKey);
         button.classList.toggle('asc', key === activeKey && activeDir === 'asc');
         button.classList.toggle('desc', key === activeKey && activeDir === 'desc');
@@ -2941,6 +3049,10 @@ INDEX_HTML = r"""<!doctype html>
       state.inactiveQuery = event.target.value;
       renderInactive();
     });
+    $('tariffSearch').addEventListener('input', (event) => {
+      state.tariffQuery = event.target.value;
+      renderTariffs();
+    });
     document.querySelectorAll('[data-inactive-center]').forEach((button) => {
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-inactive-center]').forEach((b) => b.classList.remove('active'));
@@ -3007,6 +3119,17 @@ INDEX_HTML = r"""<!doctype html>
           state.inactiveSortDir = ['days_without_class', 'weekly_average'].includes(state.inactiveSortKey) ? 'desc' : 'asc';
         }
         renderInactive();
+      });
+    });
+    document.querySelectorAll('[data-tariff-sort]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (state.tariffSortKey === button.dataset.tariffSort) {
+          state.tariffSortDir = state.tariffSortDir === 'desc' ? 'asc' : 'desc';
+        } else {
+          state.tariffSortKey = button.dataset.tariffSort;
+          state.tariffSortDir = ['cycle_start', 'contracted_classes', 'consumed_classes', 'remaining_classes', 'last_class_at'].includes(state.tariffSortKey) ? 'desc' : 'asc';
+        }
+        renderTariffs();
       });
     });
     async function promptInjuryNote(button) {
@@ -3174,6 +3297,10 @@ INDEX_HTML = r"""<!doctype html>
           document.querySelectorAll('[data-inactive-center]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveCenter === 'Getafe'));
           document.querySelectorAll('[data-inactive-bucket]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveBucket === 'Todos'));
           renderInactive();
+        } else if (button.dataset.clear === 'tariffs') {
+          state.tariffQuery = '';
+          $('tariffSearch').value = '';
+          renderTariffs();
         }
       });
     });
@@ -3184,6 +3311,7 @@ INDEX_HTML = r"""<!doctype html>
         $('membersPanel').hidden = button.dataset.tab !== 'members';
         $('pendingPanel').hidden = button.dataset.tab !== 'pending';
         $('inactivePanel').hidden = button.dataset.tab !== 'inactive';
+        $('tariffsPanel').hidden = button.dataset.tab !== 'tariffs';
         $('injuriesPanel').hidden = button.dataset.tab !== 'injuries';
         $('deletedPanel').hidden = button.dataset.tab !== 'deleted';
         $('rulesPanel').hidden = button.dataset.tab !== 'rules';
@@ -3210,6 +3338,24 @@ INDEX_HTML = r"""<!doctype html>
       } finally {
         $('inactiveRefreshBtn').disabled = false;
         $('inactiveRefreshBtn').textContent = '↻ Actualizar inactivos';
+      }
+    });
+    $('tariffRefreshBtn').addEventListener('click', async () => {
+      $('tariffRefreshBtn').disabled = true;
+      $('tariffRefreshBtn').textContent = '↻ Actualizando...';
+      try {
+        const response = await fetch('api/tariff-completions-refresh', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudo actualizar tarifas');
+        state.tariffCompletions = data.rows || [];
+        state.tariffGeneratedAt = data.generated_at || '';
+        state.tariffErrors = data.errors || [];
+        renderTariffs();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        $('tariffRefreshBtn').disabled = false;
+        $('tariffRefreshBtn').textContent = '↻ Actualizar tarifas';
       }
     });
     $('refreshBtn').addEventListener('click', async () => {
