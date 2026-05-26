@@ -2430,8 +2430,34 @@ INDEX_HTML = r"""<!doctype html>
     function riskClient(row) {
       return { name: row.nombre || '', phone: row.telefono || '', email: row.email || '', center: row.centro || row.center || row.sede || '', external_id: row.id || '', source: 'risk' };
     }
+    function normalizePhone(value) {
+      return String(value || '').replace(/\D+/g, '');
+    }
+    function findClientIdentityMatch(item) {
+      const phone = normalizePhone(item.phone || item.telefono || '');
+      const name = normalizeText(item.name || item.nombre || '');
+      const center = normalizeText(item.center || item.centro || item.sede || '');
+      const sources = [
+        ...(state.inactiveMembers || []).map((row) => ({
+          name: row.name || '', phone: row.phone || '', email: row.email || '', center: row.center || '', external_id: row.id || row.external_id || '', source: 'inactividad-aimharder'
+        })),
+        ...(state.rows || []).map((row) => ({
+          name: row.nombre || row.name || '', phone: row.telefono || row.phone || '', email: row.email || '', center: row.centro || row.center || row.sede || '', external_id: row.id || row.external_id || '', source: 'risk'
+        })),
+      ];
+      if (phone) {
+        const byPhone = sources.find((row) => normalizePhone(row.phone) === phone && (row.email || row.external_id));
+        if (byPhone) return byPhone;
+      }
+      if (name) {
+        const byNameCenter = sources.find((row) => normalizeText(row.name) === name && (!center || normalizeText(row.center) === center) && (row.email || row.external_id));
+        if (byNameCenter) return byNameCenter;
+      }
+      return {};
+    }
     function injuryClient(item) {
-      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.external_id || '', registry_id: item.registro_id || item.registry_id || '', injury_type: item.type || item.injury_type || '', injury_label: item.label || '', injury_description: item.description || '', source: 'risk-lesionados' };
+      const match = findClientIdentityMatch(item);
+      return { name: item.name || match.name || '', phone: item.phone || match.phone || '', email: item.email || match.email || '', center: item.center || match.center || '', external_id: item.external_id || match.external_id || '', registry_id: item.registro_id || item.registry_id || '', injury_type: item.type || item.injury_type || '', injury_label: item.label || '', injury_description: item.description || '', source: 'risk-lesionados' };
     }
     function clientDataAttr(data) {
       const enriched = { ...data, client_key: clientKey(data) };
