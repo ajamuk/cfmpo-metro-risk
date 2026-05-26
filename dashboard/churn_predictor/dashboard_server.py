@@ -2467,6 +2467,12 @@ INDEX_HTML = r"""<!doctype html>
       }
       return raw;
     }
+    function formatDateOnlyEs(value) {
+      return formatDateEs(value).replace(/\s+\d{1,2}:\d{2}$/, '');
+    }
+    function noteMeta(note) {
+      return [formatDateOnlyEs(note.created_at), note.author || ''].filter(Boolean).join(' · ');
+    }
     function compareInactive(a, b) {
       const dir = state.inactiveSortDir === 'asc' ? 1 : -1;
       const key = state.inactiveSortKey;
@@ -2626,7 +2632,7 @@ INDEX_HTML = r"""<!doctype html>
         $('profileInjuryDescription').value = descriptionValue || '';
         $('profileSaveInjury').dataset.registryId = registryId;
       }
-      $('profileNotes').innerHTML = (profile.notes || []).map((note) => `<div class="profile-item">${safe(note.note)}<small>${safe(note.created_at)} · ${safe(note.author || '')} · ${safe(note.source_app || '')}</small></div>`).join('') || '<div class="muted">Sin notas todavía.</div>';
+      $('profileNotes').innerHTML = (profile.notes || []).map((note) => `<div class="profile-item">${safe(note.note)}<small>${safe(noteMeta(note))}</small></div>`).join('') || '<div class="muted">Sin notas todavía.</div>';
       $('profileEvents').innerHTML = (profile.events || []).map((event) => `<div class="profile-item"><strong>${safe(event.summary)}</strong><small>${safe(event.created_at)} · ${safe(event.event_type)} · ${safe(event.source_app || '')}</small></div>`).join('') || '<div class="muted">Sin historial todavía.</div>';
     }
     document.addEventListener('click', (event) => {
