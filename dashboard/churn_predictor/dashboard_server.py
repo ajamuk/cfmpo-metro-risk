@@ -20,6 +20,7 @@ from client_profiles import add_note, get_profile, upsert_client
 from .config import ROOT, load_settings
 from .injuries import attach_injuries, load_beta_injuries, load_db_injuries, load_deleted_db_injuries, load_injuries
 from .inactivity import load_inactive_members_cache, refresh_inactive_members
+from .tariff_completions import load_tariff_completions_cache, refresh_tariff_completions
 from . import ghl as ghl_mod
 
 _LAST_PROFILE_SEED_SIGNATURE = None
@@ -68,6 +69,7 @@ def dashboard_payload() -> dict:
         if item.get("status") in {"Vencido", "Hoy", "Proximos 7 dias"}
     ]
     inactive_members = load_inactive_members_cache()
+    tariff_completions = load_tariff_completions_cache()
     return {
         "generated_at": report.generated_at,
         "report_file": report.path.name if report.path else "",
@@ -81,6 +83,11 @@ def dashboard_payload() -> dict:
         "inactive_members_threshold_days": inactive_members.get("threshold_days", 7),
         "inactive_members_kpis": inactive_members.get("kpis", {}),
         "inactive_members_centers": inactive_members.get("centers", {}),
+        "tariff_completions": tariff_completions.get("rows", []),
+        "tariff_completions_generated_at": tariff_completions.get("generated_at", ""),
+        "tariff_completions_errors": tariff_completions.get("errors", []),
+        "tariff_completions_kpis": tariff_completions.get("kpis", {}),
+        "tariff_completions_history_available": tariff_completions.get("history_available", False),
         "injury_centers": {
             "Getafe": len([item for item in injuries if item.get("center") == "Getafe"]),
             "Parla": len([item for item in injuries if item.get("center") == "Parla"]),
@@ -418,6 +425,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/inactive-members":
             self._send_json(load_inactive_members_cache())
             return
+        if parsed.path == "/api/tariff-completions":
+            self._send_json(load_tariff_completions_cache())
+            return
         if parsed.path == "/api/ghl/open":
             from urllib.parse import parse_qs
             phone = parse_qs(parsed.query).get("phone", [""])[0]
@@ -446,6 +456,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if parsed_path == "/api/inactive-refresh":
             try:
                 self._send_json(refresh_inactive_members())
+            except Exception as exc:
+                self._send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
+            return
+        if parsed_path == "/api/tariff-completions-refresh":
+            try:
+                self._send_json(refresh_tariff_completions())
             except Exception as exc:
                 self._send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
             return
@@ -1477,6 +1493,38 @@ INDEX_HTML = r"""<!doctype html>
   body #injuriesPanel th button,body #injuriesPanel th button:hover,body #injuriesPanel th button:focus-visible{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-decoration:none!important;outline:0!important}
 </style>
 
+<style id="injuries-plain-data-no-pills-20260526">
+  body #injuriesPanel .risk,
+  body #injuriesPanel .mobile-meta .risk,
+  body #injuriesPanel td:nth-child(2) .risk{
+    display:inline!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    line-height:inherit!important;
+    font-size:inherit!important;
+    white-space:normal!important;
+  }
+  body #injuriesPanel .risk.Bajo,
+  body #injuriesPanel .risk.Al.dia{color:var(--cf-green2,#A6C977)!important}
+  body #injuriesPanel .risk.Medio,
+  body #injuriesPanel .risk.Hoy{color:#FFD18A!important}
+  body #injuriesPanel .risk.Alto,
+  body #injuriesPanel .risk.Vencido{color:#FFB1A8!important}
+  body #injuriesPanel .risk.Proximos{color:#ABC8FF!important}
+  body #injuriesPanel .risk.Sin.fecha{color:rgba(195,191,190,.86)!important}
+  @media(max-width:760px){
+    body #injuriesPanel .mobile-meta .risk{flex:0 0 auto!important;font-weight:950!important;font-size:10.8px!important;line-height:1.05!important}
+  }
+</style>
+
 
 <style id="mobile-ux-review-20260525">
   @media(max-width:760px){
@@ -1762,6 +1810,139 @@ INDEX_HTML = r"""<!doctype html>
     html body #injuriesPanel tbody tr > td{max-width:100%!important;box-sizing:border-box!important}
   }
 </style>
+
+<style id="inactive-like-injuries-view-20260526">
+  body .mobile-inactive-summary{display:none}
+  body .inactive-profile-trigger{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%!important;min-height:38px!important;padding:0 14px!important;border:1px solid rgba(136,175,96,.62)!important;border-radius:14px!important;background:#22301D!important;color:#EAF4E2!important;font-weight:900!important;box-shadow:0 10px 24px rgba(0,0,0,.26)!important;cursor:pointer!important}
+  body .inactive-profile-trigger:hover{background:#2A3A22!important;border-color:rgba(166,201,119,.78)!important}
+  @media(min-width:761px){
+    body #inactivePanel table{min-width:1080px!important;table-layout:fixed!important}
+    body #inactivePanel th:nth-child(1),body #inactivePanel td:nth-child(1){width:8%!important}
+    body #inactivePanel th:nth-child(2),body #inactivePanel td:nth-child(2){width:12%!important}
+    body #inactivePanel th:nth-child(3),body #inactivePanel td:nth-child(3){width:18%!important}
+    body #inactivePanel th:nth-child(4),body #inactivePanel td:nth-child(4){width:14%!important}
+    body #inactivePanel th:nth-child(5),body #inactivePanel td:nth-child(5){width:9%!important}
+    body #inactivePanel th:nth-child(6),body #inactivePanel td:nth-child(6){width:11%!important}
+    body #inactivePanel th:nth-child(7),body #inactivePanel td:nth-child(7){width:7%!important}
+    body #inactivePanel th:nth-child(8),body #inactivePanel td:nth-child(8){width:17%!important}
+    body #inactivePanel th:nth-child(9),body #inactivePanel td:nth-child(9){width:4%!important;min-width:58px!important;max-width:72px!important;padding-left:5px!important;padding-right:5px!important;text-align:center!important}
+    body #inactivePanel th:nth-child(9){font-size:0!important}
+    body #inactivePanel th:nth-child(9)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
+    body #inactivePanel .inactive-profile-trigger{min-width:0!important;width:42px!important;max-width:42px!important;height:32px!important;min-height:32px!important;padding:0!important;margin:0 auto!important;border-radius:11px!important;font-size:0!important;box-shadow:none!important}
+    body #inactivePanel .inactive-profile-trigger::before{content:"⋯";font-size:20px!important;line-height:1!important;color:#EAF4E2!important}
+  }
+  @media(max-width:760px){
+    body #inactivePanel .toolbar{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;margin-bottom:8px!important}
+    body #inactivePanel .search{height:38px!important;min-height:38px!important;border-radius:12px!important;font-size:13px!important;padding:0 11px!important;background:rgba(9,11,9,.92)!important;border:1px solid rgba(166,201,119,.32)!important}
+    body #inactivePanel .segmented{display:flex!important;flex-wrap:wrap!important;overflow:visible!important;gap:5px!important;width:100%!important;padding:3px!important;border-radius:13px!important;background:rgba(239,233,233,.055)!important}
+    body #inactivePanel .segmented button{flex:1 1 auto!important;width:auto!important;min-width:74px!important;max-width:none!important;white-space:normal!important;line-height:1.05!important;min-height:29px!important;padding:0 7px!important;font-size:10px!important}
+    body #inactiveCountLabel{font-size:11px!important;color:rgba(239,233,233,.66)!important;justify-self:start!important}
+    body #inactiveMeta{font-size:11px!important;line-height:1.25!important;margin-bottom:8px!important}
+    body #inactivePanel .table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+    body #inactivePanel table{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;table-layout:auto!important;background:transparent!important}
+    body #inactivePanel thead{display:none!important}
+    body #inactivePanel tbody{display:grid!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:7px!important}
+    body #inactivePanel tbody tr{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:9px 10px!important;border:1px solid rgba(239,233,233,.12)!important;border-radius:13px!important;background:linear-gradient(180deg,rgba(31,36,30,.84),rgba(15,18,14,.94))!important;box-shadow:0 10px 24px rgba(0,0,0,.18)!important}
+    body #inactivePanel tbody tr > td{max-width:100%!important;box-sizing:border-box!important;padding:0!important;margin:0!important;border:0!important;min-height:0!important;line-height:1.12!important}
+    body #inactivePanel tbody tr > td:nth-child(1),
+    body #inactivePanel tbody tr > td:nth-child(2),
+    body #inactivePanel tbody tr > td:nth-child(4),
+    body #inactivePanel tbody tr > td:nth-child(5),
+    body #inactivePanel tbody tr > td:nth-child(6),
+    body #inactivePanel tbody tr > td:nth-child(7),
+    body #inactivePanel tbody tr > td:nth-child(8){display:none!important;position:absolute!important;visibility:hidden!important;inset:auto!important;width:0!important;height:0!important;max-height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden!important;grid-row:auto!important;grid-column:auto!important}
+    body #inactivePanel tbody tr > td:nth-child(3){display:block!important;position:static!important;visibility:visible!important;grid-column:1!important;grid-row:1!important;width:100%!important;overflow:visible!important}
+    body #inactivePanel tbody tr > td:nth-child(9){display:block!important;position:static!important;visibility:visible!important;grid-column:1!important;grid-row:2!important;width:100%!important;overflow:visible!important}
+    body #inactivePanel td::before{display:none!important;content:""!important}
+    body #inactivePanel .client-link{font-size:15px!important;line-height:1.08!important;font-weight:950!important;display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0 0 5px!important;text-decoration:none!important;color:var(--cf-text,#EFE9E9)!important;background:transparent!important;border:0!important;padding:0!important;min-height:0!important}
+    body #inactivePanel td:nth-child(3) > .contact{display:none!important}
+    body #inactivePanel .mobile-inactive-summary{display:grid!important;gap:5px!important;min-width:0!important}
+    body #inactivePanel .mobile-meta{display:flex!important;align-items:center!important;gap:6px!important;min-width:0!important;overflow:hidden!important;color:rgba(195,191,190,.78)!important;font-size:10.8px!important;line-height:1.05!important;white-space:nowrap!important}
+    body #inactivePanel .mobile-meta span:not(.risk){min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+    body #inactivePanel .mobile-meta .risk{flex:0 0 auto!important;min-height:20px!important;line-height:18px!important;font-size:9px!important;padding:0 7px!important}
+    body #inactivePanel .mobile-desc{font-size:12px!important;line-height:1.18!important;color:rgba(239,233,233,.88)!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
+    body #inactivePanel .mobile-note{font-size:10.8px!important;line-height:1.12!important;color:rgba(195,191,190,.76)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0!important}
+    body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:10px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
+  }
+</style>
+
+<style id="injuries-plain-data-no-pills-final-20260526">
+  html body #injuriesPanel .risk,
+  html body #injuriesPanel .mobile-meta .risk,
+  html body #injuriesPanel td:nth-child(2) .risk{
+    display:inline!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    line-height:inherit!important;
+    font-size:inherit!important;
+    white-space:normal!important;
+  }
+  html body #injuriesPanel .risk.Bajo,
+  html body #injuriesPanel .risk.Al.dia{color:var(--cf-green2,#A6C977)!important}
+  html body #injuriesPanel .risk.Medio,
+  html body #injuriesPanel .risk.Hoy{color:#FFD18A!important}
+  html body #injuriesPanel .risk.Alto,
+  html body #injuriesPanel .risk.Vencido{color:#FFB1A8!important}
+  html body #injuriesPanel .risk.Proximos{color:#ABC8FF!important}
+  html body #injuriesPanel .risk.Sin.fecha{color:rgba(195,191,190,.86)!important}
+  @media(max-width:760px){
+    html body #injuriesPanel .mobile-meta .risk{flex:0 0 auto!important;font-weight:950!important;font-size:10.8px!important;line-height:1.05!important}
+  }
+</style>
+
+<style id="injuries-plain-name-no-pill-final-20260526">
+  html body #injuriesPanel .client-link,
+  html body #injuriesPanel button.client-link{
+    appearance:none!important;
+    -webkit-appearance:none!important;
+    display:inline!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:var(--cf-text,#EFE9E9)!important;
+    font:inherit!important;
+    font-weight:950!important;
+    line-height:inherit!important;
+    text-align:left!important;
+    text-decoration:none!important;
+    cursor:pointer!important;
+  }
+  html body #injuriesPanel .client-link:hover,
+  html body #injuriesPanel button.client-link:hover{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    color:var(--cf-green2,#A6C977)!important;
+    text-decoration:none!important;
+  }
+  @media(max-width:760px){
+    html body #injuriesPanel .client-link,
+    html body #injuriesPanel button.client-link{
+      display:block!important;
+      white-space:nowrap!important;
+      overflow:hidden!important;
+      text-overflow:ellipsis!important;
+      font-size:15px!important;
+      line-height:1.08!important;
+      margin:0 0 5px!important;
+    }
+  }
+</style>
   <div class="shell">
     <aside>
       <div class="brand">
@@ -1810,6 +1991,12 @@ INDEX_HTML = r"""<!doctype html>
           <div class="nav-group-label">Inactividad</div>
           <div class="tabs" role="tablist" aria-label="Inactividad">
             <button type="button" data-tab="inactive">7+ días sin venir</button>
+          </div>
+        </div>
+        <div class="nav-group tariffs-group">
+          <div class="nav-group-label">Tarifas</div>
+          <div class="tabs" role="tablist" aria-label="Tarifas">
+            <button type="button" data-tab="tariffs">Tarifas completadas</button>
           </div>
         </div>
         <div class="nav-group risk-group">
@@ -1967,17 +2154,52 @@ INDEX_HTML = r"""<!doctype html>
           <table>
             <thead>
               <tr>
-                <th><button type="button" data-inactive-sort="days_without_class">Días sin venir</button></th>
                 <th><button type="button" data-inactive-sort="center">Centro</button></th>
+                <th><button type="button" data-inactive-sort="days_without_class">Estado</button></th>
                 <th><button type="button" data-inactive-sort="name">Socio</button></th>
-                <th><button type="button" data-inactive-sort="last_class_at">Última clase</button></th>
                 <th><button type="button" data-inactive-sort="membership_name">Tarifa</button></th>
-                <th><button type="button" data-inactive-sort="weekly_average">Media semanal</button></th>
+                <th><button type="button" data-inactive-sort="membership_active">Activa</button></th>
+                <th><button type="button" data-inactive-sort="last_class_at">Última clase</button></th>
+                <th><button type="button" data-inactive-sort="weekly_average">Media</button></th>
+                <th><button type="button" data-inactive-sort="bucket">Detalle</button></th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="inactiveRows"></tbody>
           </table>
           <div class="empty" id="inactiveEmpty" hidden>No hay socios con esos filtros.</div>
+        </section>
+      </section>
+
+      <section class="tab-panel" id="tariffsPanel" hidden>
+        <header class="panel-head risk-head">
+          <div><span>Tarifas</span><h2>Tarifas completadas · Parla</h2></div>
+          <p>Listado inicial de socios de Parla con tarifas limitadas detectadas. Por ahora no envía avisos: solo muestra el estado del cálculo.</p>
+        </header>
+        <section class="toolbar">
+          <input class="search" id="tariffSearch" type="search" placeholder="Buscar por socio, teléfono, email o tarifa">
+          <button class="button primary" id="tariffRefreshBtn" type="button">↻ Actualizar tarifas</button>
+          <button class="button" type="button" data-clear="tariffs">Limpiar búsqueda</button>
+          <div class="muted" id="tariffCountLabel">0 visibles</div>
+        </section>
+        <div class="warn" id="tariffMeta">Pendiente de actualizar.</div>
+        <section class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><button type="button" data-tariff-sort="name">Socio</button></th>
+                <th><button type="button" data-tariff-sort="membership_name">Tarifa</button></th>
+                <th><button type="button" data-tariff-sort="cycle_start">Inicio ciclo</button></th>
+                <th><button type="button" data-tariff-sort="contracted_classes">Contratadas</button></th>
+                <th><button type="button" data-tariff-sort="consumed_classes">Consumidas</button></th>
+                <th><button type="button" data-tariff-sort="remaining_classes">Restantes</button></th>
+                <th><button type="button" data-tariff-sort="last_class_at">Última clase</button></th>
+                <th><button type="button" data-tariff-sort="status">Estado</button></th>
+              </tr>
+            </thead>
+            <tbody id="tariffRows"></tbody>
+          </table>
+          <div class="empty" id="tariffEmpty" hidden>No hay tarifas con esos filtros.</div>
         </section>
       </section>
 
@@ -2025,7 +2247,7 @@ INDEX_HTML = r"""<!doctype html>
             <div class="rule-block"><strong>Tarifa</strong><p>Academy 2D +20. Academy +15. S o 9 clases +12. M o 13 clases +6. L y XL +0.</p></div>
             <div class="rule-block"><strong>Uso semanal</strong><p>Si existe media semanal: +18 por menos de 0,5 reservas/semana. +10 por menos de 1 reserva/semana.</p></div>
             <div class="rule-block"><strong>Pagos fallidos</strong><p>+10 por pago fallido reciente, con un maximo de +25 puntos.</p></div>
-            <div class="rule-block"><strong>Filtro previo</strong><p>Solo entran socios con tarifa activa detectada en el CSV de pagos del mes y cruzados con AimHarder.</p></div>
+            <div class="rule-block"><strong>Filtro previo</strong><p>Solo entran socios con tarifa activa detectada en el CSV de pagos del mes y cruzados con AimHarder. Wellhub/Gympass queda excluido de este seguimiento.</p></div>
           </div>
         </div>
       </section>
@@ -2142,6 +2364,12 @@ INDEX_HTML = r"""<!doctype html>
       inactiveMembers: [],
       inactiveGeneratedAt: '',
       inactiveErrors: [],
+      tariffCompletions: [],
+      tariffGeneratedAt: '',
+      tariffErrors: [],
+      tariffQuery: '',
+      tariffSortKey: 'cycle_start',
+      tariffSortDir: 'desc',
       inactiveCenter: 'Getafe',
       inactiveBucket: 'Todos',
       inactiveQuery: '',
@@ -2178,6 +2406,9 @@ INDEX_HTML = r"""<!doctype html>
       state.inactiveMembers = data.inactive_members || [];
       state.inactiveGeneratedAt = data.inactive_members_generated_at || '';
       state.inactiveErrors = data.inactive_members_errors || [];
+      state.tariffCompletions = data.tariff_completions || [];
+      state.tariffGeneratedAt = data.tariff_completions_generated_at || '';
+      state.tariffErrors = data.tariff_completions_errors || [];
       state.injuries = data.injuries_app || data.injuries || [];
       state.deletedInjuries = data.deleted_injuries || [];
       $('subtitle').textContent = data.generated_at
@@ -2204,6 +2435,7 @@ INDEX_HTML = r"""<!doctype html>
       renderPending();
       renderInjuries();
       renderInactive();
+      renderTariffs();
       renderDeleted();
     }
 
@@ -2280,8 +2512,34 @@ INDEX_HTML = r"""<!doctype html>
     function riskClient(row) {
       return { name: row.nombre || '', phone: row.telefono || '', email: row.email || '', center: row.centro || row.center || row.sede || '', external_id: row.id || '', source: 'risk' };
     }
+    function normalizePhone(value) {
+      return String(value || '').replace(/\D+/g, '');
+    }
+    function findClientIdentityMatch(item) {
+      const phone = normalizePhone(item.phone || item.telefono || '');
+      const name = normalizeText(item.name || item.nombre || '');
+      const center = normalizeText(item.center || item.centro || item.sede || '');
+      const sources = [
+        ...(state.inactiveMembers || []).map((row) => ({
+          name: row.name || '', phone: row.phone || '', email: row.email || '', center: row.center || '', external_id: row.id || row.external_id || '', source: 'inactividad-aimharder'
+        })),
+        ...(state.rows || []).map((row) => ({
+          name: row.nombre || row.name || '', phone: row.telefono || row.phone || '', email: row.email || '', center: row.centro || row.center || row.sede || '', external_id: row.id || row.external_id || '', source: 'risk'
+        })),
+      ];
+      if (phone) {
+        const byPhone = sources.find((row) => normalizePhone(row.phone) === phone && (row.email || row.external_id));
+        if (byPhone) return byPhone;
+      }
+      if (name) {
+        const byNameCenter = sources.find((row) => normalizeText(row.name) === name && (!center || normalizeText(row.center) === center) && (row.email || row.external_id));
+        if (byNameCenter) return byNameCenter;
+      }
+      return {};
+    }
     function injuryClient(item) {
-      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.external_id || '', registry_id: item.registro_id || item.registry_id || '', injury_type: item.type || item.injury_type || '', injury_label: item.label || '', injury_description: item.description || '', source: 'risk-lesionados' };
+      const match = findClientIdentityMatch(item);
+      return { name: item.name || match.name || '', phone: item.phone || match.phone || '', email: item.email || match.email || '', center: item.center || match.center || '', external_id: item.external_id || match.external_id || '', registry_id: item.registro_id || item.registry_id || '', injury_type: item.type || item.injury_type || '', injury_label: item.label || '', injury_description: item.description || '', source: 'risk-lesionados' };
     }
     function clientDataAttr(data) {
       const enriched = { ...data, client_key: clientKey(data) };
@@ -2407,16 +2665,21 @@ INDEX_HTML = r"""<!doctype html>
       const meta = state.inactiveGeneratedAt ? `Última actualización: ${state.inactiveGeneratedAt}` : 'Pendiente de actualizar desde AimHarder.';
       const errors = state.inactiveErrors.length ? ` · Errores: ${state.inactiveErrors.join(' | ')}` : '';
       $('inactiveMeta').textContent = `${meta}${errors}`;
-      $('inactiveRows').innerHTML = filtered.map((item) => `
+      $('inactiveRows').innerHTML = filtered.map((item) => {
+        const clientData = clientDataAttr(inactiveClient(item));
+        return `
         <tr>
-          <td><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(inactiveClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${ghlButton(item.phone)}<br>${safe(item.email || '')}</div></td>
+          <td><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
+          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${ghlButton(item.phone)}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div><div class="mobile-inactive-summary"><div class="mobile-meta"><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><span>${safe(item.phone || item.email || 'Sin contacto')}</span><span>${safe(item.membership_name || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</span></div><div class="mobile-desc">${safe(inactiveSummary(item))}</div><div class="mobile-note">${safe(item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos')}</div></div></td>
+          <td><div class="name">${safe(item.membership_name || 'Sin datos')}</div></td>
+          <td><span class="risk ${item.membership_active ? 'Bajo' : 'Sin.fecha'}">${item.membership_active ? 'Sí' : 'No'}</span><div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
-          <td>${safe(item.membership_name || 'Sin datos')}<div class="muted">${item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos'}</div></td>
           <td>${item.weekly_average === null || item.weekly_average === undefined ? '—' : safe(item.weekly_average)}</td>
-        </tr>
-      `).join('');
+          <td class="reasons">${safe(inactiveSummary(item))}</td>
+          <td><button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button></td>
+        </tr>`;
+      }).join('');
     }
     function inactiveClient(item) {
       return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', source: 'inactividad-aimharder' };
@@ -2425,11 +2688,51 @@ INDEX_HTML = r"""<!doctype html>
       if (value === null || value === undefined || value === '') return 'sin clase registrada';
       return `${value} días`;
     }
+    function inactiveSummary(item) {
+      const lastClass = formatDateEs(item.last_class_at) || 'sin clase registrada';
+      const days = inactiveDaysText(item.days_without_class);
+      const tariff = item.membership_name || 'sin tarifa detectada';
+      const avg = item.weekly_average === null || item.weekly_average === undefined ? 'sin media semanal' : `media ${item.weekly_average}/semana`;
+      return `${days} sin venir · última clase: ${lastClass} · ${tariff} · ${avg}`;
+    }
     function inactiveClass(value) {
       if (value === '31+ días') return 'Alto';
       if (value === '22-30 días') return 'Medio';
       if (value === 'Sin registro') return 'Sin.fecha';
       return 'Bajo';
+    }
+
+    function renderTariffs() {
+      const query = state.tariffQuery.trim().toLowerCase();
+      const filtered = state.tariffCompletions.filter((item) => {
+        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.status}`.toLowerCase();
+        return !query || haystack.includes(query);
+      }).sort(compareTariffs);
+      updateSortHeaders('[data-tariff-sort]', state.tariffSortKey, state.tariffSortDir);
+      $('tariffCountLabel').textContent = `${filtered.length} visibles`;
+      $('tariffEmpty').hidden = filtered.length !== 0;
+      const meta = state.tariffGeneratedAt ? `Última actualización: ${state.tariffGeneratedAt}` : 'Pendiente de actualizar desde AimHarder.';
+      const errors = state.tariffErrors.length ? ` · ${state.tariffErrors.join(' | ')}` : '';
+      $('tariffMeta').textContent = `${meta}${errors}`;
+      $('tariffRows').innerHTML = filtered.map((item) => {
+        const clientData = clientDataAttr(tariffClient(item));
+        const consumed = item.consumed_classes === null || item.consumed_classes === undefined ? 'Pendiente' : item.consumed_classes;
+        const remaining = item.remaining_classes === null || item.remaining_classes === undefined ? '—' : item.remaining_classes;
+        return `
+        <tr>
+          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div></td>
+          <td><div class="name">${safe(item.membership_name || 'Sin datos')}</div></td>
+          <td>${safe(formatDateEs(item.cycle_start) || 'Sin datos')}</td>
+          <td>${safe(item.contracted_classes || '—')}</td>
+          <td>${safe(consumed)}</td>
+          <td>${safe(remaining)}</td>
+          <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
+          <td><span class="risk ${item.consumed_classes === null || item.consumed_classes === undefined ? 'Sin.fecha' : (item.remaining_classes <= 0 ? 'Alto' : 'Bajo')}">${safe(item.status || '')}</span><div class="muted">solo listado, sin avisos</div></td>
+        </tr>`;
+      }).join('');
+    }
+    function tariffClient(item) {
+      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || 'Parla', external_id: item.id || '', source: 'tarifas-completadas' };
     }
 
     function renderDeleted() {
@@ -2490,6 +2793,23 @@ INDEX_HTML = r"""<!doctype html>
       }
       return raw;
     }
+    function formatDateOnlyEs(value) {
+      return formatDateEs(value).replace(/\s+\d{1,2}:\d{2}$/, '');
+    }
+    function noteMeta(note) {
+      return [formatDateOnlyEs(note.created_at), note.author || ''].filter(Boolean).join(' · ');
+    }
+    function compareTariffs(a, b) {
+      const dir = state.tariffSortDir === 'asc' ? 1 : -1;
+      const key = state.tariffSortKey;
+      if (['contracted_classes', 'consumed_classes', 'remaining_classes'].includes(key)) {
+        const av = a[key] === null || a[key] === undefined || a[key] === '' ? -1 : Number(a[key]);
+        const bv = b[key] === null || b[key] === undefined || b[key] === '' ? -1 : Number(b[key]);
+        return (av - bv) * dir || textCompare(a.name, b.name, dir);
+      }
+      if (['cycle_start', 'last_class_at'].includes(key)) return dateCompare(a[key], b[key], dir) || textCompare(a.name, b.name, dir);
+      return textCompare(a[key], b[key], dir) || textCompare(a.name, b.name, dir);
+    }
     function compareInactive(a, b) {
       const dir = state.inactiveSortDir === 'asc' ? 1 : -1;
       const key = state.inactiveSortKey;
@@ -2541,7 +2861,7 @@ INDEX_HTML = r"""<!doctype html>
     }
     function updateSortHeaders(selector, activeKey, activeDir) {
       document.querySelectorAll(selector).forEach((button) => {
-        const key = button.dataset.sort || button.dataset.injurySort;
+        const key = button.dataset.sort || button.dataset.injurySort || button.dataset.inactiveSort || button.dataset.tariffSort || button.dataset.pendingSort || button.dataset.deletedSort;
         button.classList.toggle('active', key === activeKey);
         button.classList.toggle('asc', key === activeKey && activeDir === 'asc');
         button.classList.toggle('desc', key === activeKey && activeDir === 'desc');
@@ -2649,11 +2969,11 @@ INDEX_HTML = r"""<!doctype html>
         $('profileInjuryDescription').value = descriptionValue || '';
         $('profileSaveInjury').dataset.registryId = registryId;
       }
-      $('profileNotes').innerHTML = (profile.notes || []).map((note) => `<div class="profile-item">${safe(note.note)}<small>${safe(note.created_at)} · ${safe(note.author || '')} · ${safe(note.source_app || '')}</small></div>`).join('') || '<div class="muted">Sin notas todavía.</div>';
+      $('profileNotes').innerHTML = (profile.notes || []).map((note) => `<div class="profile-item">${safe(note.note)}<small>${safe(noteMeta(note))}</small></div>`).join('') || '<div class="muted">Sin notas todavía.</div>';
       $('profileEvents').innerHTML = (profile.events || []).map((event) => `<div class="profile-item"><strong>${safe(event.summary)}</strong><small>${safe(event.created_at)} · ${safe(event.event_type)} · ${safe(event.source_app || '')}</small></div>`).join('') || '<div class="muted">Sin historial todavía.</div>';
     }
     document.addEventListener('click', (event) => {
-      const btn = event.target.closest('.client-link');
+      const btn = event.target.closest('.client-link, .inactive-profile-trigger');
       if (!btn) return;
       event.preventDefault();
       try { openClientProfile(JSON.parse(btn.dataset.client || '{}')); } catch (err) { console.error(err); }
@@ -2752,6 +3072,10 @@ INDEX_HTML = r"""<!doctype html>
       state.inactiveQuery = event.target.value;
       renderInactive();
     });
+    $('tariffSearch').addEventListener('input', (event) => {
+      state.tariffQuery = event.target.value;
+      renderTariffs();
+    });
     document.querySelectorAll('[data-inactive-center]').forEach((button) => {
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-inactive-center]').forEach((b) => b.classList.remove('active'));
@@ -2818,6 +3142,17 @@ INDEX_HTML = r"""<!doctype html>
           state.inactiveSortDir = ['days_without_class', 'weekly_average'].includes(state.inactiveSortKey) ? 'desc' : 'asc';
         }
         renderInactive();
+      });
+    });
+    document.querySelectorAll('[data-tariff-sort]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (state.tariffSortKey === button.dataset.tariffSort) {
+          state.tariffSortDir = state.tariffSortDir === 'desc' ? 'asc' : 'desc';
+        } else {
+          state.tariffSortKey = button.dataset.tariffSort;
+          state.tariffSortDir = ['cycle_start', 'contracted_classes', 'consumed_classes', 'remaining_classes', 'last_class_at'].includes(state.tariffSortKey) ? 'desc' : 'asc';
+        }
+        renderTariffs();
       });
     });
     async function promptInjuryNote(button) {
@@ -2985,6 +3320,10 @@ INDEX_HTML = r"""<!doctype html>
           document.querySelectorAll('[data-inactive-center]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveCenter === 'Getafe'));
           document.querySelectorAll('[data-inactive-bucket]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveBucket === 'Todos'));
           renderInactive();
+        } else if (button.dataset.clear === 'tariffs') {
+          state.tariffQuery = '';
+          $('tariffSearch').value = '';
+          renderTariffs();
         }
       });
     });
@@ -2995,6 +3334,7 @@ INDEX_HTML = r"""<!doctype html>
         $('membersPanel').hidden = button.dataset.tab !== 'members';
         $('pendingPanel').hidden = button.dataset.tab !== 'pending';
         $('inactivePanel').hidden = button.dataset.tab !== 'inactive';
+        $('tariffsPanel').hidden = button.dataset.tab !== 'tariffs';
         $('injuriesPanel').hidden = button.dataset.tab !== 'injuries';
         $('deletedPanel').hidden = button.dataset.tab !== 'deleted';
         $('rulesPanel').hidden = button.dataset.tab !== 'rules';
@@ -3021,6 +3361,24 @@ INDEX_HTML = r"""<!doctype html>
       } finally {
         $('inactiveRefreshBtn').disabled = false;
         $('inactiveRefreshBtn').textContent = '↻ Actualizar inactivos';
+      }
+    });
+    $('tariffRefreshBtn').addEventListener('click', async () => {
+      $('tariffRefreshBtn').disabled = true;
+      $('tariffRefreshBtn').textContent = '↻ Actualizando...';
+      try {
+        const response = await fetch('api/tariff-completions-refresh', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudo actualizar tarifas');
+        state.tariffCompletions = data.rows || [];
+        state.tariffGeneratedAt = data.generated_at || '';
+        state.tariffErrors = data.errors || [];
+        renderTariffs();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        $('tariffRefreshBtn').disabled = false;
+        $('tariffRefreshBtn').textContent = '↻ Actualizar tarifas';
       }
     });
     $('refreshBtn').addEventListener('click', async () => {

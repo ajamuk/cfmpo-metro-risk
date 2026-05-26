@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -12,6 +13,23 @@ from .scoring import _nested
 
 CACHE_PATH = ROOT / "reports" / "inactive_members.json"
 THRESHOLD_DAYS = 7
+BONO_VALID_MONTHS = 4
+EXCLUDED_INACTIVITY_NAMES = {
+    "alicia guiterrez pena",
+    "alicia gutierrez pena",
+    "carlos esteban mendoza",
+    "angel garcia cobo",
+    "jose luis fernandez huertas",
+    "pedro miguel gomez nunez",
+    "carla panadero",
+    "jorge escaffi rodriguez",
+    "nieves gonzalez siles",
+    "sofia merchan arroyo",
+}
+EXCLUDED_INACTIVITY_EMAILS = {
+    "angelgarciacobo@gmail.com",
+    "marialuisamendozaespada@hotmail.com",
+}
 
 
 def load_inactive_members_cache(path: Path = CACHE_PATH) -> dict:
@@ -67,6 +85,9 @@ def _inactive_rows_for_center(clients: List[Dict[str, Any]], center: CenterConfi
         name = _full_name(client)
         if not name:
             continue
+        email = str(client.get("email") or "")
+        if _excluded_person(name=name, email=email):
+            continue
         last_booking = _nested(client, "class_data", "reservation_date") or ""
         days = _days_since(last_booking)
         if days is not None and days <= THRESHOLD_DAYS:
@@ -74,16 +95,20 @@ def _inactive_rows_for_center(clients: List[Dict[str, Any]], center: CenterConfi
         client_id = str(client.get("id") or client.get("Id") or "")
         signal: LocalSignals = signals_index.find(
             client_id=client_id,
-            email=str(client.get("email") or ""),
+            email=email,
             phone=str(client.get("mobile_number") or client.get("mobile") or ""),
             name=name,
         )
+        if _excluded_from_inactivity(signal):
+            continue
+        if _expired_class_pack(signal):
+            continue
         out.append({
             "id": client_id,
             "name": name,
             "center": center.name,
             "phone": str(client.get("mobile_number") or client.get("mobile") or ""),
-            "email": str(client.get("email") or ""),
+            "email": email,
             "created_at": str(client.get("creation_date") or ""),
             "last_class_at": last_booking,
             "days_without_class": days,
@@ -134,7 +159,59 @@ def _sort_days(item: Dict[str, Any]) -> int:
 def _membership_active(signal: LocalSignals) -> bool:
     if not signal.last_membership_payment_date:
         return False
+    if _is_class_pack(signal.membership_name):
+        return date.today() <= _add_months(signal.last_membership_payment_date, BONO_VALID_MONTHS)
     return (date.today() - signal.last_membership_payment_date).days <= 31
+
+
+def _excluded_from_inactivity(signal: LocalSignals) -> bool:
+    return _is_wellhub(signal.membership_name)
+
+
+def _excluded_person(*, name: str, email: str) -> bool:
+    normalized_email = str(email or "").strip().lower()
+    if normalized_email and normalized_email in EXCLUDED_INACTIVITY_EMAILS:
+        return True
+    normalized_name = _norm_text(name)
+    if not normalized_name:
+        return False
+    for excluded_name in EXCLUDED_INACTIVITY_NAMES:
+        if normalized_name == excluded_name or excluded_name in normalized_name:
+            return True
+    return False
+
+
+def _expired_class_pack(signal: LocalSignals) -> bool:
+    if not _is_class_pack(signal.membership_name):
+        return False
+    if not signal.last_membership_payment_date:
+        return False
+    return date.today() > _add_months(signal.last_membership_payment_date, BONO_VALID_MONTHS)
+
+
+def _is_class_pack(membership_name: str) -> bool:
+    normalized = " ".join(str(membership_name or "").lower().split())
+    return normalized in {"bono 10 clases", "bono 10 clases crossfit academy"}
+
+
+def _is_wellhub(membership_name: str) -> bool:
+    normalized = " ".join(str(membership_name or "").lower().split())
+    return "wellhub" in normalized or "gympass" in normalized
+
+
+def _norm_text(value: str) -> str:
+    stripped = " ".join(str(value or "").split()).lower()
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", stripped) if not unicodedata.combining(c)
+    )
+
+
+def _add_months(value: date, months: int) -> date:
+    month_index = value.month - 1 + months
+    year = value.year + month_index // 12
+    month = month_index % 12 + 1
+    days_in_month = [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    return date(year, month, min(value.day, days_in_month[month - 1]))
 
 
 def _bucket(days: Optional[int]) -> str:

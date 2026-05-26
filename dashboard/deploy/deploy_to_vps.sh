@@ -12,6 +12,8 @@ fi
 mkdir -p "${APP_DIR}"
 rsync -a --delete \
   --exclude ".git" \
+  --exclude ".env" \
+  --exclude "data" \
   --exclude "__pycache__" \
   --exclude "logs" \
   --exclude "reports/*.html" \

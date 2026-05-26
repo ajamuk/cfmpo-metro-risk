@@ -48,6 +48,8 @@ def load_signals(data_dir: Path) -> SignalIndex:
     index = SignalIndex(by_id=signals, by_email={}, by_phone={}, by_name={})
     _load_memberships(data_dir / "tarifas.csv", signals)
     _load_payments(data_dir / "pagos.csv", index)
+    _load_payments(data_dir / "pagos_getafe.csv", index)
+    _load_payments(data_dir / "pagos_parla.csv", index)
     _load_payments(data_dir / "pagos_las_rosas.csv", index)
     _load_cancellations(data_dir / "cancelaciones.csv", signals)
     return index
@@ -174,7 +176,7 @@ def _membership_from_payment(row: dict) -> str:
     value = re.sub(r"<[^>]+>", " ", concept).strip()
     value = re.sub(r"\s+", " ", value)
     match = re.match(
-        r"^(CrossFit Academy 2 dias|CrossFit Academy 2 días|CrossFit Academy|Academy(?: 2D)?|Congelacion|Congelación|S|M|L|XL|Tarifa S|Tarifa M|Tarifa L|Tarifa XL|9 clases|13 clases|26 clases)\b",
+        r"^(Wellhub|Gympass|CrossFit Academy 2 dias|CrossFit Academy 2 días|CrossFit Academy|Academy(?: 2D)?|Congelacion|Congelación|S|M|L|XL|Tarifa S|Tarifa M|Tarifa L|Tarifa XL|Bono 10 clases CrossFit Academy|Bono 10 clases)\b",
         value,
         re.I,
     )
@@ -182,6 +184,12 @@ def _membership_from_payment(row: dict) -> str:
         return ""
     membership = match.group(1)
     lowered = membership.lower()
+    if lowered in {"wellhub", "gympass"}:
+        return "Wellhub"
+    if lowered == "bono 10 clases crossfit academy":
+        return "Bono 10 clases CrossFit Academy"
+    if lowered == "bono 10 clases":
+        return "Bono 10 clases"
     if "academy 2" in lowered:
         return "Academy 2D"
     if "academy" in lowered:
