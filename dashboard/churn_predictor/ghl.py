@@ -22,6 +22,7 @@ import json
 import os
 import re
 import sqlite3
+import subprocess
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -126,27 +127,53 @@ def _cache_upsert(con: sqlite3.Connection, phone_norm: str, contact_id: str, con
 # -------------------- GHL API --------------------
 
 def _api_request(method: str, path: str, token: str, *, params: dict | None = None, body: dict | None = None, timeout: int = 10) -> dict:
+    """Call LeadConnector with curl.
+
+    urllib/python TLS is blocked by Cloudflare 1010 on this host; curl --http1.1 is accepted.
+    Token is passed through curl config stdin so it is not exposed in the process list.
+    """
     url = f"{GHL_API_BASE}{path}"
     if params:
         url += "?" + urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
-    data = json.dumps(body).encode("utf-8") if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("Authorization", f"Bearer {token}")
-    req.add_header("Version", GHL_API_VERSION)
-    req.add_header("Accept", "application/json")
-    if data is not None:
-        req.add_header("Content-Type", "application/json")
+    cmd = [
+        "curl",
+        "--http1.1",
+        "--silent",
+        "--show-error",
+        "--max-time", str(int(timeout)),
+        "--request", method,
+        "--write-out", "\n%{http_code}",
+        "--config", "-",
+    ]
+    if body is not None:
+        cmd.extend(["--data", json.dumps(body)])
+    cmd.append(url)
+    cfg_lines = [
+        f"header = {json.dumps('Authorization: Bearer ' + token)}",
+        f"header = {json.dumps('Version: ' + GHL_API_VERSION)}",
+        f"header = {json.dumps('Accept: application/json')}",
+    ]
+    if body is not None:
+        cfg_lines.append(f"header = {json.dumps('Content-Type: application/json')}")
+    proc = subprocess.run(
+        cmd,
+        input="\n".join(cfg_lines) + "\n",
+        text=True,
+        capture_output=True,
+        timeout=timeout + 5,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"GHL API {method} {path} curl error: {proc.stderr[:300]}")
+    output = proc.stdout or ""
+    raw, _, code_text = output.rpartition("\n")
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read().decode("utf-8") or "{}"
-            return json.loads(raw)
-    except urllib.error.HTTPError as exc:
-        try:
-            err_body = exc.read().decode("utf-8")
-        except Exception:
-            err_body = ""
-        raise RuntimeError(f"GHL API {method} {path} HTTP {exc.code}: {err_body[:300]}") from exc
-
+        status = int(code_text.strip())
+    except ValueError:
+        status = 0
+        raw = output
+    if status < 200 or status >= 300:
+        raise RuntimeError(f"GHL API {method} {path} HTTP {status}: {raw[:300]}")
+    return json.loads(raw or "{}")
 
 def _find_contact_id(phone_e164: str, token: str, location_id: str) -> Optional[str]:
     # The /contacts/search/duplicate endpoint is built for "does this contact already exist"
