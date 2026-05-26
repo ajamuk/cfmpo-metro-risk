@@ -1744,6 +1744,61 @@ INDEX_HTML = r"""<!doctype html>
     html body #injuriesPanel tbody tr > td{max-width:100%!important;box-sizing:border-box!important}
   }
 </style>
+
+<style id="inactive-like-injuries-view-20260526">
+  body .mobile-inactive-summary{display:none}
+  body .inactive-profile-trigger{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%!important;min-height:38px!important;padding:0 14px!important;border:1px solid rgba(136,175,96,.62)!important;border-radius:14px!important;background:#22301D!important;color:#EAF4E2!important;font-weight:900!important;box-shadow:0 10px 24px rgba(0,0,0,.26)!important;cursor:pointer!important}
+  body .inactive-profile-trigger:hover{background:#2A3A22!important;border-color:rgba(166,201,119,.78)!important}
+  @media(min-width:761px){
+    body #inactivePanel table{min-width:1080px!important;table-layout:fixed!important}
+    body #inactivePanel th:nth-child(1),body #inactivePanel td:nth-child(1){width:8%!important}
+    body #inactivePanel th:nth-child(2),body #inactivePanel td:nth-child(2){width:12%!important}
+    body #inactivePanel th:nth-child(3),body #inactivePanel td:nth-child(3){width:18%!important}
+    body #inactivePanel th:nth-child(4),body #inactivePanel td:nth-child(4){width:14%!important}
+    body #inactivePanel th:nth-child(5),body #inactivePanel td:nth-child(5){width:9%!important}
+    body #inactivePanel th:nth-child(6),body #inactivePanel td:nth-child(6){width:11%!important}
+    body #inactivePanel th:nth-child(7),body #inactivePanel td:nth-child(7){width:7%!important}
+    body #inactivePanel th:nth-child(8),body #inactivePanel td:nth-child(8){width:17%!important}
+    body #inactivePanel th:nth-child(9),body #inactivePanel td:nth-child(9){width:4%!important;min-width:58px!important;max-width:72px!important;padding-left:5px!important;padding-right:5px!important;text-align:center!important}
+    body #inactivePanel th:nth-child(9){font-size:0!important}
+    body #inactivePanel th:nth-child(9)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
+    body #inactivePanel .inactive-profile-trigger{min-width:0!important;width:42px!important;max-width:42px!important;height:32px!important;min-height:32px!important;padding:0!important;margin:0 auto!important;border-radius:11px!important;font-size:0!important;box-shadow:none!important}
+    body #inactivePanel .inactive-profile-trigger::before{content:"⋯";font-size:20px!important;line-height:1!important;color:#EAF4E2!important}
+  }
+  @media(max-width:760px){
+    body #inactivePanel .toolbar{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;margin-bottom:8px!important}
+    body #inactivePanel .search{height:38px!important;min-height:38px!important;border-radius:12px!important;font-size:13px!important;padding:0 11px!important;background:rgba(9,11,9,.92)!important;border:1px solid rgba(166,201,119,.32)!important}
+    body #inactivePanel .segmented{display:flex!important;flex-wrap:wrap!important;overflow:visible!important;gap:5px!important;width:100%!important;padding:3px!important;border-radius:13px!important;background:rgba(239,233,233,.055)!important}
+    body #inactivePanel .segmented button{flex:1 1 auto!important;width:auto!important;min-width:74px!important;max-width:none!important;white-space:normal!important;line-height:1.05!important;min-height:29px!important;padding:0 7px!important;font-size:10px!important}
+    body #inactiveCountLabel{font-size:11px!important;color:rgba(239,233,233,.66)!important;justify-self:start!important}
+    body #inactiveMeta{font-size:11px!important;line-height:1.25!important;margin-bottom:8px!important}
+    body #inactivePanel .table-wrap{overflow:visible!important;width:100%!important;max-width:100%!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+    body #inactivePanel table{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;table-layout:auto!important;background:transparent!important}
+    body #inactivePanel thead{display:none!important}
+    body #inactivePanel tbody{display:grid!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:7px!important}
+    body #inactivePanel tbody tr{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:9px 10px!important;border:1px solid rgba(239,233,233,.12)!important;border-radius:13px!important;background:linear-gradient(180deg,rgba(31,36,30,.84),rgba(15,18,14,.94))!important;box-shadow:0 10px 24px rgba(0,0,0,.18)!important}
+    body #inactivePanel tbody tr > td{max-width:100%!important;box-sizing:border-box!important;padding:0!important;margin:0!important;border:0!important;min-height:0!important;line-height:1.12!important}
+    body #inactivePanel tbody tr > td:nth-child(1),
+    body #inactivePanel tbody tr > td:nth-child(2),
+    body #inactivePanel tbody tr > td:nth-child(4),
+    body #inactivePanel tbody tr > td:nth-child(5),
+    body #inactivePanel tbody tr > td:nth-child(6),
+    body #inactivePanel tbody tr > td:nth-child(7),
+    body #inactivePanel tbody tr > td:nth-child(8){display:none!important;position:absolute!important;visibility:hidden!important;inset:auto!important;width:0!important;height:0!important;max-height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden!important;grid-row:auto!important;grid-column:auto!important}
+    body #inactivePanel tbody tr > td:nth-child(3){display:block!important;position:static!important;visibility:visible!important;grid-column:1!important;grid-row:1!important;width:100%!important;overflow:visible!important}
+    body #inactivePanel tbody tr > td:nth-child(9){display:block!important;position:static!important;visibility:visible!important;grid-column:1!important;grid-row:2!important;width:100%!important;overflow:visible!important}
+    body #inactivePanel td::before{display:none!important;content:""!important}
+    body #inactivePanel .client-link{font-size:15px!important;line-height:1.08!important;font-weight:950!important;display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0 0 5px!important;text-decoration:none!important;color:var(--cf-text,#EFE9E9)!important;background:transparent!important;border:0!important;padding:0!important;min-height:0!important}
+    body #inactivePanel td:nth-child(3) > .contact{display:none!important}
+    body #inactivePanel .mobile-inactive-summary{display:grid!important;gap:5px!important;min-width:0!important}
+    body #inactivePanel .mobile-meta{display:flex!important;align-items:center!important;gap:6px!important;min-width:0!important;overflow:hidden!important;color:rgba(195,191,190,.78)!important;font-size:10.8px!important;line-height:1.05!important;white-space:nowrap!important}
+    body #inactivePanel .mobile-meta span:not(.risk){min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+    body #inactivePanel .mobile-meta .risk{flex:0 0 auto!important;min-height:20px!important;line-height:18px!important;font-size:9px!important;padding:0 7px!important}
+    body #inactivePanel .mobile-desc{font-size:12px!important;line-height:1.18!important;color:rgba(239,233,233,.88)!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
+    body #inactivePanel .mobile-note{font-size:10.8px!important;line-height:1.12!important;color:rgba(195,191,190,.76)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0!important}
+    body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:10px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
+  }
+</style>
   <div class="shell">
     <aside>
       <div class="brand">
@@ -1949,12 +2004,15 @@ INDEX_HTML = r"""<!doctype html>
           <table>
             <thead>
               <tr>
-                <th><button type="button" data-inactive-sort="days_without_class">Días sin venir</button></th>
                 <th><button type="button" data-inactive-sort="center">Centro</button></th>
+                <th><button type="button" data-inactive-sort="days_without_class">Estado</button></th>
                 <th><button type="button" data-inactive-sort="name">Socio</button></th>
-                <th><button type="button" data-inactive-sort="last_class_at">Última clase</button></th>
                 <th><button type="button" data-inactive-sort="membership_name">Tarifa</button></th>
-                <th><button type="button" data-inactive-sort="weekly_average">Media semanal</button></th>
+                <th><button type="button" data-inactive-sort="membership_active">Activa</button></th>
+                <th><button type="button" data-inactive-sort="last_class_at">Última clase</button></th>
+                <th><button type="button" data-inactive-sort="weekly_average">Media</button></th>
+                <th><button type="button" data-inactive-sort="bucket">Detalle</button></th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="inactiveRows"></tbody>
@@ -2389,16 +2447,21 @@ INDEX_HTML = r"""<!doctype html>
       const meta = state.inactiveGeneratedAt ? `Última actualización: ${state.inactiveGeneratedAt}` : 'Pendiente de actualizar desde AimHarder.';
       const errors = state.inactiveErrors.length ? ` · Errores: ${state.inactiveErrors.join(' | ')}` : '';
       $('inactiveMeta').textContent = `${meta}${errors}`;
-      $('inactiveRows').innerHTML = filtered.map((item) => `
+      $('inactiveRows').innerHTML = filtered.map((item) => {
+        const clientData = clientDataAttr(inactiveClient(item));
+        return `
         <tr>
-          <td><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(inactiveClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}<br>${safe(item.email || '')}</div></td>
+          <td><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
+          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div><div class="mobile-inactive-summary"><div class="mobile-meta"><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><span>${safe(item.phone || item.email || 'Sin contacto')}</span><span>${safe(item.membership_name || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</span></div><div class="mobile-desc">${safe(inactiveSummary(item))}</div><div class="mobile-note">${safe(item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos')}</div></div></td>
+          <td><div class="name">${safe(item.membership_name || 'Sin datos')}</div></td>
+          <td><span class="risk ${item.membership_active ? 'Bajo' : 'Sin.fecha'}">${item.membership_active ? 'Sí' : 'No'}</span><div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
-          <td>${safe(item.membership_name || 'Sin datos')}<div class="muted">${item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos'}</div></td>
           <td>${item.weekly_average === null || item.weekly_average === undefined ? '—' : safe(item.weekly_average)}</td>
-        </tr>
-      `).join('');
+          <td class="reasons">${safe(inactiveSummary(item))}</td>
+          <td><button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button></td>
+        </tr>`;
+      }).join('');
     }
     function inactiveClient(item) {
       return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', source: 'inactividad-aimharder' };
@@ -2406,6 +2469,13 @@ INDEX_HTML = r"""<!doctype html>
     function inactiveDaysText(value) {
       if (value === null || value === undefined || value === '') return 'sin clase registrada';
       return `${value} días`;
+    }
+    function inactiveSummary(item) {
+      const lastClass = formatDateEs(item.last_class_at) || 'sin clase registrada';
+      const days = inactiveDaysText(item.days_without_class);
+      const tariff = item.membership_name || 'sin tarifa detectada';
+      const avg = item.weekly_average === null || item.weekly_average === undefined ? 'sin media semanal' : `media ${item.weekly_average}/semana`;
+      return `${days} sin venir · última clase: ${lastClass} · ${tariff} · ${avg}`;
     }
     function inactiveClass(value) {
       if (value === '31+ días') return 'Alto';
@@ -2636,7 +2706,7 @@ INDEX_HTML = r"""<!doctype html>
       $('profileEvents').innerHTML = (profile.events || []).map((event) => `<div class="profile-item"><strong>${safe(event.summary)}</strong><small>${safe(event.created_at)} · ${safe(event.event_type)} · ${safe(event.source_app || '')}</small></div>`).join('') || '<div class="muted">Sin historial todavía.</div>';
     }
     document.addEventListener('click', (event) => {
-      const btn = event.target.closest('.client-link');
+      const btn = event.target.closest('.client-link, .inactive-profile-trigger');
       if (!btn) return;
       event.preventDefault();
       try { openClientProfile(JSON.parse(btn.dataset.client || '{}')); } catch (err) { console.error(err); }
