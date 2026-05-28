@@ -175,40 +175,67 @@ def _api_request(method: str, path: str, token: str, *, params: dict | None = No
         raise RuntimeError(f"GHL API {method} {path} HTTP {status}: {raw[:300]}")
     return json.loads(raw or "{}")
 
-def _find_contact_id(phone_e164: str, token: str, location_id: str) -> Optional[str]:
+def _phone_variants(phone_e164: str, country_code: str = "34") -> list[str]:
+    """Generate plausible stored formats of a phone for GHL lookup.
+
+    GHL contacts may have been imported/created with different formats. We try:
+        +34644355820  (E.164)
+        34644355820   (digits only, with country code)
+        644355820     (national, no country code)
+    """
+    variants: list[str] = []
+    seen: set[str] = set()
+
+    def add(v: str) -> None:
+        if v and v not in seen:
+            seen.add(v)
+            variants.append(v)
+
+    add(phone_e164)
+    digits = re.sub(r"\D+", "", phone_e164)
+    add(digits)
+    if country_code and digits.startswith(country_code):
+        add(digits[len(country_code):])
+    return variants
+
+
+def _find_contact_id(phone_e164: str, token: str, location_id: str, country_code: str = "34") -> Optional[str]:
     # The /contacts/search/duplicate endpoint is built for "does this contact already exist"
     # lookups and accepts a phone number. Falls back to /contacts/search if needed.
-    try:
-        resp = _api_request(
-            "GET",
-            "/contacts/search/duplicate",
-            token,
-            params={"locationId": location_id, "number": phone_e164},
-        )
-        contact = resp.get("contact") or {}
-        cid = contact.get("id")
-        if cid:
-            return cid
-    except RuntimeError:
-        pass
+    # We try multiple phone formats because contacts may be stored without '+' or country code.
+    for variant in _phone_variants(phone_e164, country_code):
+        try:
+            resp = _api_request(
+                "GET",
+                "/contacts/search/duplicate",
+                token,
+                params={"locationId": location_id, "number": variant},
+            )
+            contact = resp.get("contact") or {}
+            cid = contact.get("id")
+            if cid:
+                return cid
+        except RuntimeError:
+            pass
 
-    # Fallback: generic search by query string.
-    try:
-        resp = _api_request(
-            "POST",
-            "/contacts/search",
-            token,
-            body={
-                "locationId": location_id,
-                "query": phone_e164,
-                "pageLimit": 5,
-            },
-        )
-        contacts = resp.get("contacts") or []
-        if contacts:
-            return contacts[0].get("id")
-    except RuntimeError:
-        return None
+    # Fallback: generic search by query string (also try variants).
+    for variant in _phone_variants(phone_e164, country_code):
+        try:
+            resp = _api_request(
+                "POST",
+                "/contacts/search",
+                token,
+                body={
+                    "locationId": location_id,
+                    "query": variant,
+                    "pageLimit": 5,
+                },
+            )
+            contacts = resp.get("contacts") or []
+            if contacts:
+                return contacts[0].get("id")
+        except RuntimeError:
+            continue
     return None
 
 
@@ -267,7 +294,7 @@ def resolve_conversation(phone: str) -> dict:
         conversation_id = cached["conversation_id"] if cached else ""
 
         if not contact_id:
-            contact_id = _find_contact_id(phone_e164, cfg["token"], cfg["location_id"]) or ""
+            contact_id = _find_contact_id(phone_e164, cfg["token"], cfg["location_id"], cfg["country_code"]) or ""
             if not contact_id:
                 return {"ok": False, "error": f"Contacto no encontrado en GHL para {phone_e164}"}
 
