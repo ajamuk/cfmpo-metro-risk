@@ -21,6 +21,7 @@ from .config import ROOT, load_settings
 from .injuries import attach_injuries, attach_tariffs_to_injuries, load_beta_injuries, load_db_injuries, load_deleted_db_injuries, load_injuries
 from .local_data import load_signals
 from .inactivity import load_inactive_members_cache, refresh_inactive_members
+from .inactive_workflow import enrich_inactive_rows, mark_inactive_workflow
 from .tariff_completions import load_tariff_completions_cache, refresh_tariff_completions
 from . import ghl as ghl_mod
 
@@ -71,6 +72,7 @@ def dashboard_payload() -> dict:
         if item.get("status") in {"Vencido", "Hoy", "Proximos 7 dias"}
     ]
     inactive_members = load_inactive_members_cache()
+    inactive_rows = enrich_inactive_rows(inactive_members.get("rows", []))
     tariff_completions = load_tariff_completions_cache()
     return {
         "generated_at": report.generated_at,
@@ -79,7 +81,7 @@ def dashboard_payload() -> dict:
         "injuries": linked_injuries,
         "injuries_app": injuries,
         "deleted_injuries": deleted_injuries,
-        "inactive_members": inactive_members.get("rows", []),
+        "inactive_members": inactive_rows,
         "inactive_members_generated_at": inactive_members.get("generated_at", ""),
         "inactive_members_errors": inactive_members.get("errors", []),
         "inactive_members_threshold_days": inactive_members.get("threshold_days", 7),
@@ -104,7 +106,7 @@ def dashboard_payload() -> dict:
             "no_class_30": len(no_class_30),
             "injured": len(linked_injuries),
             "injury_due": len(injury_due),
-            "inactive_7d": len(inactive_members.get("rows", [])),
+            "inactive_7d": len(inactive_rows),
             "avg_score": round(sum(int(row.get("score") or 0) for row in rows) / len(rows), 1) if rows else 0,
         },
     }
@@ -425,7 +427,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._send_json(get_profile(key) if key else {})
             return
         if parsed.path == "/api/inactive-members":
-            self._send_json(load_inactive_members_cache())
+            data = load_inactive_members_cache()
+            data["rows"] = enrich_inactive_rows(data.get("rows", []))
+            self._send_json(data)
             return
         if parsed.path == "/api/tariff-completions":
             self._send_json(load_tariff_completions_cache())
@@ -460,6 +464,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json(refresh_inactive_members())
             except Exception as exc:
                 self._send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
+            return
+        if parsed_path == "/api/inactive-workflow":
+            try:
+                raw = self.rfile.read(min(int(self.headers.get('content-length', '0')), 50000))
+                body = json.loads(raw.decode() or '{}')
+                self._send_json(mark_inactive_workflow(body))
+            except Exception as exc:
+                self._send_json({"ok": False, "error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
         if parsed_path == "/api/tariff-completions-refresh":
             try:
@@ -1815,19 +1827,18 @@ INDEX_HTML = r"""<!doctype html>
 
 <style id="inactive-like-injuries-view-20260526">
   body .mobile-inactive-summary{display:none}
-  body .inactive-profile-trigger{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%!important;min-height:34px!important;padding:0 10px!important;border:1px solid rgba(136,175,96,.38)!important;border-radius:6px!important;background:transparent!important;color:#EAF4E2!important;font-weight:800!important;box-shadow:none!important;cursor:pointer!important}
-  body .inactive-profile-trigger:hover{background:rgba(136,175,96,.10)!important;border-color:rgba(166,201,119,.62)!important}
+  body .inactive-actions{display:flex!important;align-items:center!important;gap:6px!important;justify-content:flex-start!important;flex-wrap:wrap!important}
+  body .inactive-workflow-action,body .inactive-profile-trigger{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;min-height:34px!important;padding:0 10px!important;border:1px solid rgba(136,175,96,.38)!important;border-radius:6px!important;background:transparent!important;color:#EAF4E2!important;font-weight:800!important;box-shadow:none!important;cursor:pointer!important}
+  body .inactive-workflow-action:hover,body .inactive-profile-trigger:hover{background:rgba(136,175,96,.10)!important;border-color:rgba(166,201,119,.62)!important}
   @media(min-width:761px){
-    body #inactivePanel table{min-width:1080px!important;table-layout:fixed!important}
-    body #inactivePanel th:nth-child(1),body #inactivePanel td:nth-child(1){width:10%!important}
-    body #inactivePanel th:nth-child(2),body #inactivePanel td:nth-child(2){width:15%!important}
-    body #inactivePanel th:nth-child(3),body #inactivePanel td:nth-child(3){width:26%!important}
-    body #inactivePanel th:nth-child(4),body #inactivePanel td:nth-child(4){width:20%!important}
-    body #inactivePanel th:nth-child(5),body #inactivePanel td:nth-child(5){width:11%!important}
+    body #inactivePanel table{min-width:1180px!important;table-layout:fixed!important}
+    body #inactivePanel th:nth-child(1),body #inactivePanel td:nth-child(1){width:9%!important}
+    body #inactivePanel th:nth-child(2),body #inactivePanel td:nth-child(2){width:10%!important}
+    body #inactivePanel th:nth-child(3),body #inactivePanel td:nth-child(3){width:25%!important}
+    body #inactivePanel th:nth-child(4),body #inactivePanel td:nth-child(4){width:18%!important}
+    body #inactivePanel th:nth-child(5),body #inactivePanel td:nth-child(5){width:9%!important}
     body #inactivePanel th:nth-child(6),body #inactivePanel td:nth-child(6){width:13%!important}
-    body #inactivePanel th:nth-child(7),body #inactivePanel td:nth-child(7){width:5%!important;min-width:58px!important;max-width:72px!important;padding-left:5px!important;padding-right:5px!important;text-align:center!important}
-    body #inactivePanel th:nth-child(7){font-size:0!important}
-    body #inactivePanel th:nth-child(7)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
+    body #inactivePanel th:nth-child(7),body #inactivePanel td:nth-child(7){width:16%!important;padding-left:5px!important;padding-right:5px!important}
     body #inactivePanel .inactive-profile-trigger{min-width:0!important;width:42px!important;max-width:42px!important;height:30px!important;min-height:30px!important;padding:0!important;margin:0 auto!important;border-radius:6px!important;font-size:0!important;box-shadow:none!important}
     body #inactivePanel .inactive-profile-trigger::before{content:"⋯";font-size:20px!important;line-height:1!important;color:#EAF4E2!important}
   }
@@ -1859,7 +1870,8 @@ INDEX_HTML = r"""<!doctype html>
     body #inactivePanel .mobile-meta span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
     body #inactivePanel .mobile-desc{font-size:12px!important;line-height:1.18!important;color:rgba(239,233,233,.88)!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
     body #inactivePanel .mobile-note{font-size:10.8px!important;line-height:1.12!important;color:rgba(195,191,190,.76)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0!important}
-    body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:6px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
+    body #inactivePanel .inactive-actions{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;width:100%!important}
+    body #inactivePanel .inactive-workflow-action,body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:6px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
   }
 </style>
 
@@ -2181,6 +2193,11 @@ INDEX_HTML = r"""<!doctype html>
             <button type="button" data-inactive-center="Parla">Parla</button>
             <button type="button" data-inactive-center="Las Rosas">Las Rosas</button>
           </div>
+          <div class="segmented" aria-label="Estado del flujo de inactivos">
+            <button type="button" class="active" data-inactive-workflow="pending">Pendientes de escribir</button>
+            <button type="button" data-inactive-workflow="review">En revisión</button>
+            <button type="button" data-inactive-workflow="done">Hecho</button>
+          </div>
           <button class="button primary" id="inactiveRefreshBtn" type="button">↻ Actualizar inactivos</button>
           <button class="button" type="button" data-clear="inactive">Limpiar filtros</button>
           <div class="muted" id="inactiveCountLabel">0 visibles</div>
@@ -2407,6 +2424,7 @@ INDEX_HTML = r"""<!doctype html>
       tariffSortDir: 'desc',
       inactiveCenter: 'Getafe',
       inactiveQuery: '',
+      inactiveWorkflow: 'pending',
       inactiveSortKey: 'days_without_class',
       inactiveSortDir: 'asc',
       scoredRows: [],
@@ -2690,8 +2708,9 @@ INDEX_HTML = r"""<!doctype html>
       const filtered = state.inactiveMembers.filter((item) => {
         const searching = Boolean(query);
         const centerOk = searching || item.center === state.inactiveCenter;
-        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket}`.toLowerCase();
-        return centerOk && (!query || haystack.includes(query));
+        const workflowOk = searching || item.workflow_status === state.inactiveWorkflow;
+        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket} ${item.workflow_status_label}`.toLowerCase();
+        return centerOk && workflowOk && (!query || haystack.includes(query));
       }).sort(compareInactive);
       updateSortHeaders('[data-inactive-sort]', state.inactiveSortKey, state.inactiveSortDir);
       $('inactiveCountLabel').textContent = `${filtered.length} visibles`;
@@ -2709,9 +2728,24 @@ INDEX_HTML = r"""<!doctype html>
           <td><div class="name">${safe(item.membership_name || 'Sin datos')}</div></td>
           <td>${item.membership_active ? 'Sí' : 'No'}<div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
-          <td><button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button></td>
+          <td>${inactiveWorkflowActions(item, clientData)}</td>
         </tr>`;
       }).join('');
+    }
+    function inactiveWorkflowActions(item, clientData) {
+      const payload = safe(JSON.stringify({ workflow_key: item.workflow_key || '', member: item }));
+      const profile = `<button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button>`;
+      if (item.workflow_status === 'pending') {
+        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-payload='${payload}'>Escrito</button>${profile}</div>`;
+      }
+      if (item.workflow_status === 'review') {
+        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="done" data-inactive-payload='${payload}'>Hecho</button>${profile}</div>`;
+      }
+      if (item.workflow_status === 'done') {
+        const doneAt = formatDateEs(item.workflow_done_at) || 'Hecho';
+        return `<div class="inactive-actions"><span class="muted">${safe(doneAt)}</span><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-payload='${payload}'>Reabrir</button>${profile}</div>`;
+      }
+      return profile;
     }
     function inactiveClient(item) {
       return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', source: 'inactividad-aimharder' };
@@ -3110,6 +3144,14 @@ INDEX_HTML = r"""<!doctype html>
         renderInactive();
       });
     });
+    document.querySelectorAll('[data-inactive-workflow]').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('[data-inactive-workflow]').forEach((b) => b.classList.remove('active'));
+        button.classList.add('active');
+        state.inactiveWorkflow = button.dataset.inactiveWorkflow;
+        renderInactive();
+      });
+    });
     document.querySelectorAll('[data-pending-center]').forEach((button) => {
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-pending-center]').forEach((b) => b.classList.remove('active'));
@@ -3304,6 +3346,26 @@ INDEX_HTML = r"""<!doctype html>
         renderDeleted();
       });
     });
+    document.addEventListener('click', async (event) => {
+      const button = event.target.closest('.inactive-workflow-action');
+      if (!button) return;
+      event.preventDefault();
+      const original = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Guardando...';
+      try {
+        const payload = JSON.parse(button.dataset.inactivePayload || '{}');
+        payload.status = button.dataset.inactiveNext;
+        const response = await fetch('api/inactive-workflow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || 'No se pudo guardar');
+        await loadData();
+      } catch (error) {
+        alert(error.message);
+        button.disabled = false;
+        button.textContent = original;
+      }
+    });
     document.querySelectorAll('[data-clear]').forEach((button) => {
       button.addEventListener('click', () => {
         if (button.dataset.clear === 'risk') {
@@ -3333,10 +3395,12 @@ INDEX_HTML = r"""<!doctype html>
         } else if (button.dataset.clear === 'inactive') {
           state.inactiveQuery = '';
           state.inactiveCenter = 'Getafe';
+          state.inactiveWorkflow = 'pending';
           $('inactiveSearch').value = '';
           state.inactiveSortKey = 'days_without_class';
           state.inactiveSortDir = 'asc';
           document.querySelectorAll('[data-inactive-center]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveCenter === 'Getafe'));
+          document.querySelectorAll('[data-inactive-workflow]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveWorkflow === 'pending'));
           renderInactive();
         } else if (button.dataset.clear === 'tariffs') {
           state.tariffQuery = '';
@@ -3369,11 +3433,7 @@ INDEX_HTML = r"""<!doctype html>
         const response = await fetch('api/inactive-refresh', { method: 'POST' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'No se pudo actualizar inactivos');
-        state.inactiveMembers = data.rows || [];
-        state.inactiveGeneratedAt = data.generated_at || '';
-        state.inactiveErrors = data.errors || [];
-        renderInactive();
-        $('kpiInactive').textContent = state.inactiveMembers.length;
+        await loadData();
       } catch (error) {
         alert(error.message);
       } finally {
