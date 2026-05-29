@@ -2209,6 +2209,21 @@ INDEX_HTML = r"""<!doctype html>
       font-size:.72rem!important;
     }
   }
+  /* modules-disabled-20260529: Carlos pidió desactivar Riesgo de bajas y Tarifas completadas. */
+  aside .nav,
+  .risk-group,
+  .tariffs-group,
+  #membersPanel,
+  #tariffsPanel,
+  #rulesPanel,
+  #settingsPanel,
+  #refreshBtn,
+  .kpis .kpi:nth-child(1),
+  .kpis .kpi:nth-child(2),
+  .kpis .kpi:nth-child(3),
+  .kpis .kpi:nth-child(4),
+  .kpis .kpi:nth-child(5),
+  .kpis .kpi:nth-child(9){display:none!important;}
 </style>
   <div class="shell">
     <aside>
@@ -2226,11 +2241,11 @@ INDEX_HTML = r"""<!doctype html>
     <main class="main">
       <div class="topbar">
         <div>
-          <h1>Riesgo de bajas · Lesionados</h1>
-          <p class="subtitle" id="subtitle">Socios con tarifa activa clasificados por riesgo a dia de hoy.</p>
+          <h1>Lesionados · Inactividad</h1>
+          <p class="subtitle" id="subtitle">Seguimiento operativo de lesionados y socios 7+ días sin venir.</p>
         </div>
         <div class="actions">
-          <button class="button primary" id="refreshBtn" type="button" title="Actualiza el listado con AimHarder">↻ Recalcular</button>
+          <button class="button primary" id="refreshBtn" type="button" title="Actualiza el listado con AimHarder" hidden>↻ Recalcular</button>
         </div>
       </div>
 
