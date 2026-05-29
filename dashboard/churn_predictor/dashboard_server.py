@@ -2173,8 +2173,7 @@ INDEX_HTML = r"""<!doctype html>
           <div class="segmented" aria-label="Filtro de seguimiento">
             <button type="button" class="active" data-injury-status="Todos">Todos</button>
             <button type="button" data-injury-status="Nuevos">Nuevos</button>
-            <button type="button" data-injury-status="Vencido">Vencido</button>
-            <button type="button" data-injury-status="Hoy y próximos">Próximos</button>
+            <button type="button" data-injury-status="Pendientes de escribir">Pendientes de escribir</button>
             <button type="button" data-injury-status="Pendiente respuesta">Pendiente respuesta</button>
             <button type="button" data-injury-status="Al dia">Al dia</button>
             <button type="button" data-injury-status="Sin fecha">Sin fecha</button>
@@ -2701,8 +2700,10 @@ INDEX_HTML = r"""<!doctype html>
         const days = Number(rawDays);
         const hasDays = rawDays !== null && rawDays !== undefined && rawDays !== '';
         const todayOrSoon = hasDays && Number.isFinite(days) && days >= 0 && days < 7;
+        const overdue = item.status === 'Vencido' || (hasDays && Number.isFinite(days) && days < 0);
+        const pendingToWrite = !noFollowUp && (overdue || todayOrSoon);
         const hasInteraction = Boolean(String(item.latest_note || '').trim());
-        const statusOk = searching || (state.injuryStatus === 'Nuevos' ? (!noFollowUp && !hasInteraction) : (state.injuryStatus === 'Sin seguimiento' ? noFollowUp : (state.injuryStatus === 'Hoy y próximos' ? (!noFollowUp && todayOrSoon) : (state.injuryStatus === 'Todos' ? !noFollowUp : (!noFollowUp && item.status === state.injuryStatus)))));
+        const statusOk = searching || (state.injuryStatus === 'Nuevos' ? (!noFollowUp && !hasInteraction) : (state.injuryStatus === 'Sin seguimiento' ? noFollowUp : (state.injuryStatus === 'Pendientes de escribir' ? pendingToWrite : (state.injuryStatus === 'Todos' ? !noFollowUp : (!noFollowUp && item.status === state.injuryStatus)))));
         const centerOk = searching || item.center === state.injuryCenter;
         const haystack = `${item.center} ${item.name} ${item.phone} ${item.label} ${item.description} ${item.latest_note} ${item.source} ${item.follow_up}`.toLowerCase();
         return statusOk && centerOk && (!query || haystack.includes(query));
