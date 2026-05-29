@@ -2736,14 +2736,14 @@ INDEX_HTML = r"""<!doctype html>
       const payload = safe(JSON.stringify({ workflow_key: item.workflow_key || '', member: item }));
       const profile = `<button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button>`;
       if (item.workflow_status === 'pending') {
-        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-payload='${payload}'>Escrito</button>${profile}</div>`;
+        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-jump="review" data-inactive-payload='${payload}'>En revisión</button>${profile}</div>`;
       }
       if (item.workflow_status === 'review') {
-        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="done" data-inactive-payload='${payload}'>Hecho</button>${profile}</div>`;
+        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="done" data-inactive-jump="done" data-inactive-payload='${payload}'>Hecho</button>${profile}</div>`;
       }
       if (item.workflow_status === 'done') {
         const doneAt = formatDateEs(item.workflow_done_at) || 'Hecho';
-        return `<div class="inactive-actions"><span class="muted">${safe(doneAt)}</span><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-payload='${payload}'>Reabrir</button>${profile}</div>`;
+        return `<div class="inactive-actions"><span class="muted">${safe(doneAt)}</span><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-jump="review" data-inactive-payload='${payload}'>Reabrir</button>${profile}</div>`;
       }
       return profile;
     }
@@ -3359,6 +3359,10 @@ INDEX_HTML = r"""<!doctype html>
         const response = await fetch('api/inactive-workflow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || 'No se pudo guardar');
+        if (button.dataset.inactiveJump) {
+          state.inactiveWorkflow = button.dataset.inactiveJump;
+          document.querySelectorAll('[data-inactive-workflow]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveWorkflow === state.inactiveWorkflow));
+        }
         await loadData();
       } catch (error) {
         alert(error.message);
