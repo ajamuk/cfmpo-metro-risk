@@ -62,7 +62,7 @@ class AimHarderClient:
 
         return rows_out, self.center
 
-    def _get(self, path: str, params: Dict[str, str] | None = None, retry_refresh: bool = True) -> Any:
+    def _get(self, path: str, params: Dict[str, str] | None = None, retry_refresh: bool = True, rate_limit_attempts: int = 1) -> Any:
         query = f"?{urllib.parse.urlencode(params)}" if params else ""
         url = f"{self.center.base_url}{path}{query}"
         request = urllib.request.Request(
@@ -79,12 +79,20 @@ class AimHarderClient:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="replace")
+            if exc.code == 429 and rate_limit_attempts > 0:
+                retry_after = exc.headers.get("Retry-After")
+                try:
+                    wait_seconds = min(max(int(retry_after or "30"), 5), 45)
+                except ValueError:
+                    wait_seconds = 30
+                time.sleep(wait_seconds)
+                return self._get(path, params=params, retry_refresh=retry_refresh, rate_limit_attempts=rate_limit_attempts - 1)
             if self._should_refresh_token(exc.code, body) and retry_refresh and self.center.refresh_token:
                 try:
                     self.center = self._refresh_tokens()
                 except AimHarderError as refresh_exc:
                     raise AimHarderError(f"{self.center.name}: token caducado y no se pudo renovar: {refresh_exc}") from refresh_exc
-                return self._get(path, params=params, retry_refresh=False)
+                return self._get(path, params=params, retry_refresh=False, rate_limit_attempts=rate_limit_attempts)
             raise AimHarderError(f"{self.center.name}: API {exc.code} en {path}: {body}") from exc
         except urllib.error.URLError as exc:
             raise AimHarderError(f"{self.center.name}: no se pudo conectar con AimHarder: {exc}") from exc
