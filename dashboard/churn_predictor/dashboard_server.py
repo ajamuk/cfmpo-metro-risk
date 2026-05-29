@@ -1535,28 +1535,6 @@ INDEX_HTML = r"""<!doctype html>
   body #injuriesPanel th button,body #injuriesPanel th button:hover,body #injuriesPanel th button:focus-visible{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-decoration:none!important;outline:0!important}
 </style>
 
-<style id="injuries-perfect-readable-final-20260529">
-  @media(min-width:761px){
-    body #injuriesPanel .table-wrap{overflow-x:hidden!important;width:100%!important}
-    body #injuriesPanel table{display:block!important;width:100%!important;min-width:0!important;table-layout:auto!important;font-size:11.3px!important}
-    body #injuriesPanel thead,body #injuriesPanel tbody{display:block!important;width:100%!important}
-    body #injuriesPanel thead tr,body #injuriesPanel tbody tr{display:grid!important;width:100%!important;grid-template-columns:minmax(54px,.42fr) minmax(98px,.78fr) minmax(170px,1.28fr) minmax(118px,.86fr) minmax(38px,.28fr) minmax(68px,.45fr) minmax(230px,1.65fr) minmax(86px,.62fr) minmax(220px,1.55fr)!important;align-items:start!important;gap:0!important}
-    body #injuriesPanel th,body #injuriesPanel td{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;padding:8px 7px!important;line-height:1.24!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;word-break:normal!important;overflow-wrap:anywhere!important;vertical-align:top!important}
-    body #injuriesPanel th button{display:block!important;width:100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.12!important;font-size:10.2px!important;letter-spacing:.045em!important}
-    body #injuriesPanel td *,body #injuriesPanel td .name,body #injuriesPanel td .muted,body #injuriesPanel td .contact,body #injuriesPanel td .reasons,body #injuriesPanel td .risk{max-width:100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;word-break:normal!important;overflow-wrap:anywhere!important}
-    body #injuriesPanel td .name,body #injuriesPanel td.reasons,body #injuriesPanel td:nth-child(7) .name,body #injuriesPanel td:nth-child(9).reasons{display:block!important;-webkit-line-clamp:unset!important;-webkit-box-orient:unset!important;max-height:none!important}
-    body #injuriesPanel td:nth-child(1),body #injuriesPanel td:nth-child(5),body #injuriesPanel td:nth-child(6),body #injuriesPanel td:nth-child(8){font-size:10.8px!important}
-    body #injuriesPanel td:nth-child(6) .risk{display:none!important}
-    body #injuriesPanel td:nth-child(6) .muted{display:block!important}
-    body #injuriesPanel td:nth-child(3) .client-link{display:block!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.16!important}
-    body #injuriesPanel td:nth-child(3) .contact{font-size:10.5px!important;line-height:1.16!important;margin-top:3px!important}
-    body #injuriesPanel td:nth-child(4) .risk{display:block!important;line-height:1.18!important}
-    body #injuriesPanel td:nth-child(4) .muted{font-size:10.2px!important;line-height:1.16!important;margin-top:3px!important}
-    body #injuriesPanel td:nth-child(8){overflow-wrap:normal!important;word-break:normal!important}
-    body #injuriesPanel tbody tr{min-height:0!important}
-  }
-</style>
-
 <style id="injuries-plain-data-no-pills-20260526">
   body #injuriesPanel .risk,
   body #injuriesPanel .mobile-meta .risk,
@@ -2046,28 +2024,6 @@ INDEX_HTML = r"""<!doctype html>
       line-height:1.08!important;
       margin:0 0 5px!important;
     }
-  }
-</style>
-
-<style id="injuries-perfect-readable-last-20260529">
-  @media(min-width:761px){
-    html body #injuriesPanel .table-wrap{overflow-x:hidden!important;width:100%!important}
-    html body #injuriesPanel table{display:block!important;width:100%!important;min-width:0!important;table-layout:auto!important;font-size:11.3px!important}
-    html body #injuriesPanel thead,html body #injuriesPanel tbody{display:block!important;width:100%!important}
-    html body #injuriesPanel thead tr,html body #injuriesPanel tbody tr{display:grid!important;width:100%!important;grid-template-columns:minmax(54px,.42fr) minmax(98px,.78fr) minmax(170px,1.28fr) minmax(118px,.86fr) minmax(38px,.28fr) minmax(68px,.45fr) minmax(230px,1.65fr) minmax(86px,.62fr) minmax(220px,1.55fr)!important;align-items:start!important;gap:0!important}
-    html body #injuriesPanel th,html body #injuriesPanel td{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;padding:8px 7px!important;line-height:1.24!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;word-break:normal!important;overflow-wrap:anywhere!important;vertical-align:top!important}
-    html body #injuriesPanel th button{display:block!important;width:100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.12!important;font-size:10.2px!important;letter-spacing:.045em!important}
-    html body #injuriesPanel td *,html body #injuriesPanel td .name,html body #injuriesPanel td .muted,html body #injuriesPanel td .contact,html body #injuriesPanel td .reasons,html body #injuriesPanel td .risk{max-width:100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;word-break:normal!important;overflow-wrap:anywhere!important}
-    html body #injuriesPanel td .name,html body #injuriesPanel td.reasons,html body #injuriesPanel td:nth-child(7) .name,html body #injuriesPanel td:nth-child(9).reasons{display:block!important;-webkit-line-clamp:unset!important;-webkit-box-orient:unset!important;max-height:none!important}
-    html body #injuriesPanel td:nth-child(1),html body #injuriesPanel td:nth-child(5),html body #injuriesPanel td:nth-child(6),html body #injuriesPanel td:nth-child(8){font-size:10.8px!important}
-    html body #injuriesPanel td:nth-child(6) .risk{display:none!important}
-    html body #injuriesPanel td:nth-child(6) .muted{display:block!important}
-    html body #injuriesPanel td:nth-child(3) .client-link{display:block!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.16!important}
-    html body #injuriesPanel td:nth-child(3) .contact{font-size:10.5px!important;line-height:1.16!important;margin-top:3px!important}
-    html body #injuriesPanel td:nth-child(4) .risk{display:block!important;line-height:1.18!important}
-    html body #injuriesPanel td:nth-child(4) .muted{font-size:10.2px!important;line-height:1.16!important;margin-top:3px!important}
-    html body #injuriesPanel td:nth-child(8){overflow-wrap:normal!important;word-break:normal!important}
-    html body #injuriesPanel tbody tr{min-height:0!important}
   }
 </style>
   <div class="shell">
