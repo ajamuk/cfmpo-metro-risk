@@ -2026,6 +2026,26 @@ INDEX_HTML = r"""<!doctype html>
     }
   }
 </style>
+
+<style id="injuries-last-action-wide-fix-20260529">
+  @media(min-width:761px){
+    html body #injuriesPanel table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+    html body #injuriesPanel .table-wrap{overflow-x:hidden!important}
+    html body #injuriesPanel th,html body #injuriesPanel td{box-sizing:border-box!important}
+    html body #injuriesPanel th:nth-child(1),html body #injuriesPanel td:nth-child(1){width:6%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(2),html body #injuriesPanel td:nth-child(2){width:10%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(3),html body #injuriesPanel td:nth-child(3){width:18%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(4),html body #injuriesPanel td:nth-child(4){width:9%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(5),html body #injuriesPanel td:nth-child(5){width:4%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(6),html body #injuriesPanel td:nth-child(6){width:5%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(7),html body #injuriesPanel td:nth-child(7){width:20%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(8),html body #injuriesPanel td:nth-child(8){width:8%!important;min-width:0!important;max-width:none!important}
+    html body #injuriesPanel th:nth-child(9),html body #injuriesPanel td:nth-child(9){width:20%!important;min-width:0!important;max-width:none!important;text-align:left!important;padding-left:8px!important;padding-right:8px!important}
+    html body #injuriesPanel th:nth-child(9){font-size:inherit!important;white-space:normal!important}
+    html body #injuriesPanel th:nth-child(9)::after{display:none!important;content:""!important}
+    html body #injuriesPanel td:nth-child(9).reasons{display:block!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-height:none!important;line-height:1.25!important}
+  }
+</style>
   <div class="shell">
     <aside>
       <div class="brand">
