@@ -2209,6 +2209,30 @@ INDEX_HTML = r"""<!doctype html>
       font-size:.72rem!important;
     }
   }
+  /* injury-new-pending-unified-20260529: Nuevos se agrupan dentro de Pendientes de escribir. */
+  html body #injuriesPanel .injury-new-badge,
+  html body #pendingPanel .injury-new-badge{
+    display:inline-flex!important;
+    align-items:center!important;
+    width:max-content!important;
+    max-width:100%!important;
+    min-height:20px!important;
+    margin-top:4px!important;
+    padding:0 8px!important;
+    border-radius:999px!important;
+    border:1px solid rgba(136,175,96,.46)!important;
+    background:linear-gradient(135deg,rgba(136,175,96,.22),rgba(166,201,119,.10))!important;
+    color:#D6F5AE!important;
+    font-size:10px!important;
+    font-weight:950!important;
+    letter-spacing:.04em!important;
+    text-transform:uppercase!important;
+    white-space:nowrap!important;
+  }
+  html body #injuriesPanel tr.injury-new-row,
+  html body #pendingPanel tr.injury-new-row{
+    box-shadow:inset 3px 0 0 rgba(136,175,96,.78)!important;
+  }
   /* modules-disabled-20260529: Carlos pidió desactivar Riesgo de bajas y Tarifas completadas. */
   aside .nav,
   .risk-group,
@@ -2375,7 +2399,6 @@ INDEX_HTML = r"""<!doctype html>
           </div>
           <div class="segmented" aria-label="Filtro de seguimiento">
             <button type="button" class="active" data-injury-status="Todos">Todos</button>
-            <button type="button" data-injury-status="Nuevos">Nuevos</button>
             <button type="button" data-injury-status="Pendientes de escribir">Pendientes de escribir</button>
             <button type="button" data-injury-status="Pendiente respuesta">Pendiente respuesta</button>
             <button type="button" data-injury-status="Al dia">Al dia</button>
@@ -2857,8 +2880,9 @@ INDEX_HTML = r"""<!doctype html>
         const days = Number(item.days_remaining);
         const follow = normalizeText(item.follow_up || '');
         const noFollowUp = ['no', 'n', 'false', '0', 'sin seguimiento'].includes(follow);
+        const isNew = !String(item.latest_note || '').trim();
         if (noFollowUp || item.status === 'Sin seguimiento') return false;
-        return item.status === 'Pendiente respuesta' || item.status === 'Sin fecha' || (Number.isFinite(days) && days < 7);
+        return isNew || item.status === 'Pendiente respuesta' || item.status === 'Sin fecha' || (Number.isFinite(days) && days < 7);
       });
     }
 
@@ -2880,9 +2904,11 @@ INDEX_HTML = r"""<!doctype html>
       $('pendingEmpty').hidden = filtered.length !== 0;
       $('pendingRows').innerHTML = filtered.map((item) => {
         const id = item.registro_id || item.registry_id || '';
+        const isNew = !String(item.latest_note || '').trim();
+        const newBadge = isNew ? '<span class="injury-new-badge">Nuevo</span>' : '';
         return `
-        <tr>
-          <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><div class="muted">${safe(daysText(item.days_remaining))}</div></td>
+        <tr class="${isNew ? 'injury-new-row' : ''}">
+          <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span>${newBadge}<div class="muted">${safe(daysText(item.days_remaining))}</div></td>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
           <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div></td>
           <td><div class="name">${safe(item.label || '')}</div><div class="muted">${safe(item.description || '')}</div></td>
@@ -2904,9 +2930,10 @@ INDEX_HTML = r"""<!doctype html>
         const hasDays = rawDays !== null && rawDays !== undefined && rawDays !== '';
         const todayOrSoon = hasDays && Number.isFinite(days) && days >= 0 && days < 7;
         const overdue = item.status === 'Vencido' || (hasDays && Number.isFinite(days) && days < 0);
-        const pendingToWrite = !noFollowUp && (overdue || todayOrSoon);
         const hasInteraction = Boolean(String(item.latest_note || '').trim());
-        const statusOk = searching || (state.injuryStatus === 'Nuevos' ? (!noFollowUp && !hasInteraction) : (state.injuryStatus === 'Sin seguimiento' ? noFollowUp : (state.injuryStatus === 'Pendientes de escribir' ? pendingToWrite : (state.injuryStatus === 'Todos' ? !noFollowUp : (!noFollowUp && item.status === state.injuryStatus)))));
+        const isNew = !noFollowUp && !hasInteraction;
+        const pendingToWrite = !noFollowUp && (isNew || overdue || todayOrSoon);
+        const statusOk = searching || (state.injuryStatus === 'Sin seguimiento' ? noFollowUp : (state.injuryStatus === 'Pendientes de escribir' ? pendingToWrite : (state.injuryStatus === 'Todos' ? !noFollowUp : (!noFollowUp && item.status === state.injuryStatus))));
         const centerOk = searching || item.center === state.injuryCenter;
         const haystack = `${item.center} ${item.name} ${item.phone} ${item.label} ${item.description} ${item.latest_note} ${item.source} ${item.follow_up}`.toLowerCase();
         return statusOk && centerOk && (!query || haystack.includes(query));
@@ -2916,11 +2943,13 @@ INDEX_HTML = r"""<!doctype html>
       $('injuryEmpty').hidden = filtered.length !== 0;
       $('injuryRows').innerHTML = filtered.map((item) => {
         const id = item.registro_id || item.registry_id || '';
+        const isNew = !String(item.latest_note || '').trim();
+        const newBadge = isNew ? '<span class="injury-new-badge">Nuevo</span>' : '';
         return `
-        <tr>
+        <tr class="${isNew ? 'injury-new-row' : ''}">
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
-          <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><div class="muted">${safe(daysText(item.days_remaining))}</div></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><span>${safe(item.phone || '')}</span><span>${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
+          <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span>${newBadge}<div class="muted">${safe(daysText(item.days_remaining))}</div></td>
+          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span>${newBadge}<span>${safe(item.phone || '')}</span><span>${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
           <td><span class="risk ${item.membership_name || item.tariff ? 'Bajo' : 'Sin.fecha'}">${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><div class="muted">${safe(item.last_membership_payment_date ? 'último pago ' + formatDateEs(item.last_membership_payment_date) : '')}</div></td>
           <td>${safe(item.type || '')}</td>
           <td><span class="risk ${item.label ? 'Bajo' : 'Sin.fecha'}">${item.label ? 'Sí' : 'No'}</span><div class="muted">${safe(item.label || 'Sin etiqueta')}</div></td>
