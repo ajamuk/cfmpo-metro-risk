@@ -2194,6 +2194,7 @@ INDEX_HTML = r"""<!doctype html>
             <button type="button" data-inactive-center="Las Rosas">Las Rosas</button>
           </div>
           <div class="segmented" aria-label="Estado del flujo de inactivos">
+            <button type="button" data-inactive-workflow="all">Todos</button>
             <button type="button" class="active" data-inactive-workflow="pending">Pendientes de escribir</button>
             <button type="button" data-inactive-workflow="review">En revisión</button>
             <button type="button" data-inactive-workflow="done">Hecho</button>
@@ -2708,7 +2709,7 @@ INDEX_HTML = r"""<!doctype html>
       const filtered = state.inactiveMembers.filter((item) => {
         const searching = Boolean(query);
         const centerOk = searching || item.center === state.inactiveCenter;
-        const workflowOk = searching || item.workflow_status === state.inactiveWorkflow;
+        const workflowOk = searching || state.inactiveWorkflow === 'all' || item.workflow_status === state.inactiveWorkflow;
         const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket} ${item.workflow_status_label}`.toLowerCase();
         return centerOk && workflowOk && (!query || haystack.includes(query));
       }).sort(compareInactive);
