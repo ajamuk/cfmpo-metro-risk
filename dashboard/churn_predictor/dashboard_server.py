@@ -2113,6 +2113,7 @@ INDEX_HTML = r"""<!doctype html>
                 <th><button type="button" data-injury-sort="center">Centro</button></th>
                 <th><button type="button" data-injury-sort="status">Seguimiento</button></th>
                 <th><button type="button" data-injury-sort="name">Socio</button></th>
+                <th><button type="button" data-injury-sort="membership_name">Tarifa</button></th>
                 <th><button type="button" data-injury-sort="type">Tipo</button></th>
                 <th><button type="button" data-injury-sort="label">Etiqueta</button></th>
                 <th>Lesion</th>
@@ -2642,7 +2643,8 @@ INDEX_HTML = r"""<!doctype html>
         <tr>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
           <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><div class="muted">${safe(daysText(item.days_remaining))}</div></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div><div class="muted">${safe(item.membership_name || item.tariff || 'Sin tarifa detectada')}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><span>${safe(item.phone || '')}</span><span>${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
+          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><span>${safe(item.phone || '')}</span><span>${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
+          <td><span class="risk ${item.membership_name || item.tariff ? 'Bajo' : 'Sin.fecha'}">${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><div class="muted">${safe(item.last_membership_payment_date ? 'último pago ' + formatDateEs(item.last_membership_payment_date) : '')}</div></td>
           <td>${safe(item.type || '')}</td>
           <td><span class="risk ${item.label ? 'Bajo' : 'Sin.fecha'}">${item.label ? 'Sí' : 'No'}</span><div class="muted">${safe(item.label || 'Sin etiqueta')}</div></td>
           <td><div class="name">${safe(item.description || '')}</div></td>
@@ -2959,7 +2961,7 @@ INDEX_HTML = r"""<!doctype html>
       $('profileEmail').textContent = client.email || '—';
       $('profileCenter').textContent = client.center || '—';
       $('profileExternal').textContent = client.external_id || '—';
-      $('profileTariff').textContent = client.membership_name || client.tariff || '—';
+      $('profileTariff').textContent = client.membership_name || client.tariff || currentProfileClient?.membership_name || currentProfileClient?.tariff || '—';
       const injuryEdit = $('profileInjuryEdit');
       const registryId = client.registry_id || currentProfileClient?.registry_id || '';
       injuryEdit.hidden = !registryId;
