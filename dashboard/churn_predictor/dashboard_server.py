@@ -2180,7 +2180,7 @@ INDEX_HTML = r"""<!doctype html>
     html body #inactivePanel th:nth-child(4),html body #inactivePanel td:nth-child(4){min-width:18ch!important}   /* Tarifa */
     html body #inactivePanel th:nth-child(5),html body #inactivePanel td:nth-child(5){min-width:7ch!important}    /* Activa */
     html body #inactivePanel th:nth-child(6),html body #inactivePanel td:nth-child(6){min-width:11ch!important}   /* Última clase */
-    html body #inactivePanel th:nth-child(7),html body #inactivePanel td:nth-child(7){min-width:12rem!important}  /* Acciones need enough room for workflow + profile buttons. */
+    html body #inactivePanel th:nth-child(7),html body #inactivePanel td:nth-child(7){min-width:8rem!important}   /* Workflow action only; profile remains accessible from the member name. */
     html body #inactivePanel .client-link,
     html body #inactivePanel .name,
     html body #inactivePanel .contact,
@@ -2948,18 +2948,17 @@ INDEX_HTML = r"""<!doctype html>
     }
     function inactiveWorkflowActions(item, clientData) {
       const payload = safe(JSON.stringify({ workflow_key: item.workflow_key || '', member: item }));
-      const profile = `<button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button>`;
       if (item.workflow_status === 'pending') {
-        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-jump="review" data-inactive-payload='${payload}'>En revisión</button>${profile}</div>`;
+        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-jump="review" data-inactive-payload='${payload}'>En revisión</button></div>`;
       }
       if (item.workflow_status === 'review') {
-        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="done" data-inactive-jump="done" data-inactive-payload='${payload}'>Hecho</button>${profile}</div>`;
+        return `<div class="inactive-actions"><button class="inactive-workflow-action" type="button" data-inactive-next="done" data-inactive-jump="done" data-inactive-payload='${payload}'>Hecho</button></div>`;
       }
       if (item.workflow_status === 'done') {
         const doneAt = formatDateEs(item.workflow_done_at) || 'Hecho';
-        return `<div class="inactive-actions"><span class="muted">${safe(doneAt)}</span><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-jump="review" data-inactive-payload='${payload}'>Reabrir</button>${profile}</div>`;
+        return `<div class="inactive-actions"><span class="muted">${safe(doneAt)}</span><button class="inactive-workflow-action" type="button" data-inactive-next="review" data-inactive-jump="review" data-inactive-payload='${payload}'>Reabrir</button></div>`;
       }
-      return profile;
+      return '';
     }
     function inactiveClient(item) {
       return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', source: 'inactividad-aimharder' };
