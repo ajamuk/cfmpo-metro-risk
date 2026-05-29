@@ -2131,7 +2131,7 @@ INDEX_HTML = r"""<!doctype html>
       <section class="tab-panel" id="inactivePanel" hidden>
         <header class="panel-head risk-head">
           <div><span>Inactividad</span><h2>Socios 7+ días sin venir</h2></div>
-          <p>Consulta directa a AimHarder. Muestra socios activos que llevan más de 7 días sin registrar clase o reserva.</p>
+          <p>Flujo único por centro, ordenado de menos a más tiempo sin venir.</p>
         </header>
         <section class="toolbar">
           <input class="search" id="inactiveSearch" type="search" placeholder="Buscar por nombre, teléfono, email o tarifa">
@@ -2139,14 +2139,6 @@ INDEX_HTML = r"""<!doctype html>
             <button type="button" class="active" data-inactive-center="Getafe">Getafe</button>
             <button type="button" data-inactive-center="Parla">Parla</button>
             <button type="button" data-inactive-center="Las Rosas">Las Rosas</button>
-          </div>
-          <div class="segmented" aria-label="Filtro por días sin venir">
-            <button type="button" class="active" data-inactive-bucket="Todos">Todos</button>
-            <button type="button" data-inactive-bucket="8-14 días">8-14</button>
-            <button type="button" data-inactive-bucket="15-21 días">15-21</button>
-            <button type="button" data-inactive-bucket="22-30 días">22-30</button>
-            <button type="button" data-inactive-bucket="31+ días">31+</button>
-            <button type="button" data-inactive-bucket="Sin registro">Sin registro</button>
           </div>
           <button class="button primary" id="inactiveRefreshBtn" type="button">↻ Actualizar inactivos</button>
           <button class="button" type="button" data-clear="inactive">Limpiar filtros</button>
@@ -2375,10 +2367,9 @@ INDEX_HTML = r"""<!doctype html>
       tariffSortKey: 'cycle_start',
       tariffSortDir: 'desc',
       inactiveCenter: 'Getafe',
-      inactiveBucket: 'Todos',
       inactiveQuery: '',
       inactiveSortKey: 'days_without_class',
-      inactiveSortDir: 'desc',
+      inactiveSortDir: 'asc',
       scoredRows: [],
       injuries: [],
       injuryStatus: 'Todos',
@@ -2660,9 +2651,8 @@ INDEX_HTML = r"""<!doctype html>
       const filtered = state.inactiveMembers.filter((item) => {
         const searching = Boolean(query);
         const centerOk = searching || item.center === state.inactiveCenter;
-        const bucketOk = state.inactiveBucket === 'Todos' || item.bucket === state.inactiveBucket;
-        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket} ${item.contact_action} ${item.contact_priority} ${item.contact_reason}`.toLowerCase();
-        return centerOk && bucketOk && (!query || haystack.includes(query));
+        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket} ${item.contact_action} ${item.contact_reason}`.toLowerCase();
+        return centerOk && (!query || haystack.includes(query));
       }).sort(compareInactive);
       updateSortHeaders('[data-inactive-sort]', state.inactiveSortKey, state.inactiveSortDir);
       $('inactiveCountLabel').textContent = `${filtered.length} visibles`;
@@ -2681,13 +2671,13 @@ INDEX_HTML = r"""<!doctype html>
           <td><span class="risk ${item.membership_active ? 'Bajo' : 'Sin.fecha'}">${item.membership_active ? 'Sí' : 'No'}</span><div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
           <td>${item.weekly_average === null || item.weekly_average === undefined ? '—' : safe(item.weekly_average)}</td>
-          <td class="reasons"><span class="risk ${contactActionClass(item.contact_action)}">${safe(item.contact_action || 'Revisar')}</span><div class="muted">${safe([item.contact_priority, item.contact_reason].filter(Boolean).join(' · '))}</div></td>
+          <td class="reasons"><span class="risk ${contactActionClass(item.contact_action)}">${safe(item.contact_action || 'Revisar')}</span><div class="muted">${safe(item.contact_reason || '')}</div></td>
           <td><button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button></td>
         </tr>`;
       }).join('');
     }
     function inactiveClient(item) {
-      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', contact_action: item.contact_action || '', contact_priority: item.contact_priority || '', contact_reason: item.contact_reason || '', message_template: item.message_template || '', source: 'inactividad-aimharder' };
+      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', contact_action: item.contact_action || '', contact_reason: item.contact_reason || '', message_template: item.message_template || '', source: 'inactividad-aimharder' };
     }
     function inactiveDaysText(value) {
       if (value === null || value === undefined || value === '') return 'sin clase registrada';
@@ -3096,14 +3086,6 @@ INDEX_HTML = r"""<!doctype html>
         renderInactive();
       });
     });
-    document.querySelectorAll('[data-inactive-bucket]').forEach((button) => {
-      button.addEventListener('click', () => {
-        document.querySelectorAll('[data-inactive-bucket]').forEach((b) => b.classList.remove('active'));
-        button.classList.add('active');
-        state.inactiveBucket = button.dataset.inactiveBucket;
-        renderInactive();
-      });
-    });
     document.querySelectorAll('[data-pending-center]').forEach((button) => {
       button.addEventListener('click', () => {
         document.querySelectorAll('[data-pending-center]').forEach((b) => b.classList.remove('active'));
@@ -3151,7 +3133,7 @@ INDEX_HTML = r"""<!doctype html>
           state.inactiveSortDir = state.inactiveSortDir === 'desc' ? 'asc' : 'desc';
         } else {
           state.inactiveSortKey = button.dataset.inactiveSort;
-          state.inactiveSortDir = ['days_without_class', 'weekly_average'].includes(state.inactiveSortKey) ? 'desc' : 'asc';
+          state.inactiveSortDir = state.inactiveSortKey === 'weekly_average' ? 'desc' : 'asc';
         }
         renderInactive();
       });
@@ -3327,10 +3309,10 @@ INDEX_HTML = r"""<!doctype html>
         } else if (button.dataset.clear === 'inactive') {
           state.inactiveQuery = '';
           state.inactiveCenter = 'Getafe';
-          state.inactiveBucket = 'Todos';
           $('inactiveSearch').value = '';
+          state.inactiveSortKey = 'days_without_class';
+          state.inactiveSortDir = 'asc';
           document.querySelectorAll('[data-inactive-center]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveCenter === 'Getafe'));
-          document.querySelectorAll('[data-inactive-bucket]').forEach((b) => b.classList.toggle('active', b.dataset.inactiveBucket === 'Todos'));
           renderInactive();
         } else if (button.dataset.clear === 'tariffs') {
           state.tariffQuery = '';

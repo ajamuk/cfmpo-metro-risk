@@ -143,51 +143,47 @@ def _contact_decision(row: Dict[str, Any], signal: LocalSignals, today: date | N
     active = bool(row.get("membership_active"))
 
     if not has_phone:
-        return _decision("No escribir", "Baja", "Sin teléfono", "")
+        return _decision("No escribir", "Sin teléfono", "")
 
     if _is_freeze(normalized_membership):
         if _is_last_week_of_month(today):
             return _decision(
                 "Escribir",
-                "Media",
                 "Congelación: última semana del mes, preguntar si quiere reactivarse",
                 "Hola {nombre}, soy del equipo de CrossFit Metropolitano. Como termina el mes, quería preguntarte si tienes previsto reactivar tu tarifa para volver a entrenar en {centro}. ¿Te ayudo con la vuelta?",
             )
-        return _decision("Esperar", "Baja", "Congelación: escribir solo la última semana del mes", "")
+        return _decision("Esperar", "Congelación: escribir solo la última semana del mes", "")
 
     if not membership:
-        return _decision("Revisar", "Media", "Sin tarifa detectada", "")
+        return _decision("Revisar", "Sin tarifa detectada", "")
 
     if not active:
-        return _decision("Revisar", "Baja", "Tarifa no confirmada por pagos", "")
+        return _decision("Revisar", "Tarifa no confirmada por pagos", "")
 
     if _is_class_pack(membership):
-        return _decision("Revisar", "Baja", "Bono 10 clases: revisar consumo/caducidad antes de escribir", "")
+        return _decision("Revisar", "Bono 10 clases: revisar consumo/caducidad antes de escribir", "")
 
     if days is None:
-        return _decision("Revisar", "Media", "Sin fecha de última clase", "")
+        return _decision("Revisar", "Sin fecha de última clase", "")
 
     if isinstance(days, int) and 8 <= days <= 14:
         return _decision(
             "Escribir",
-            "Alta",
             "Tarifa activa y 8-14 días sin venir",
             "Hola {nombre}, soy del equipo de CrossFit Metropolitano. Hemos visto que llevas unos días sin venir a entrenar y queríamos saber si está todo bien. ¿Necesitas que te ayudemos a retomar esta semana?",
         )
     if isinstance(days, int) and 15 <= days <= 30:
         return _decision(
             "Escribir",
-            "Media",
             "Tarifa activa y 15-30 días sin venir",
             "Hola {nombre}, soy del equipo de CrossFit Metropolitano. Hace ya unas semanas que no te vemos entrenar y queríamos saber cómo estás. ¿Te viene bien que busquemos una forma sencilla de retomar?",
         )
-    return _decision("Revisar", "Baja", "31+ días sin venir: revisar caso antes de escribir", "")
+    return _decision("Revisar", "31+ días sin venir: revisar caso antes de escribir", "")
 
 
-def _decision(action: str, priority: str, reason: str, message_template: str) -> dict:
+def _decision(action: str, reason: str, message_template: str) -> dict:
     return {
         "contact_action": action,
-        "contact_priority": priority,
         "contact_reason": reason,
         "message_template": message_template,
     }
