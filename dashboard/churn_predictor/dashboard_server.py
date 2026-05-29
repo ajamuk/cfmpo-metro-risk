@@ -2127,6 +2127,89 @@ INDEX_HTML = r"""<!doctype html>
     html body #injuriesPanel td:nth-child(6) .muted{display:block!important}
   }
 </style>
+
+<style id="inactive-auto-layout-final-20260529">
+  /* Desktop/tablet: content-driven table for +7 días sin venir, without changing data or workflow logic. */
+  @media(min-width:761px){
+    html body #inactivePanel .table-wrap{
+      width:100%!important;              /* Always consume the full available panel width. */
+      max-width:100%!important;
+      overflow-x:auto!important;         /* Horizontal scroll only when readable minimums truly exceed the viewport. */
+      overflow-y:auto!important;         /* Keep long inactive lists scrolling inside the table, not the whole page. */
+      max-height:calc(100vh - 18rem)!important;
+    }
+    html body #inactivePanel table{
+      width:100%!important;              /* Expand to the parent width even with few columns/short content. */
+      min-width:fit-content!important;   /* Allow natural growth only when content minimums need it. */
+      table-layout:auto!important;       /* Let columns size from real content instead of fixed percentages. */
+      border-collapse:separate!important;
+      border-spacing:0!important;
+      font-size:clamp(.68rem,.72vw,.78rem)!important;
+    }
+    html body #inactivePanel thead th{
+      position:sticky!important;         /* Headers stay visible while scrolling the contained table. */
+      top:0!important;
+      z-index:5!important;
+      background:rgba(18,18,18,.98)!important;
+    }
+    html body #inactivePanel th,
+    html body #inactivePanel td{
+      width:auto!important;              /* Reset older fixed percentage widths. */
+      min-width:0!important;
+      max-width:none!important;
+      box-sizing:border-box!important;
+      padding:.48rem .55rem!important;
+      vertical-align:top!important;
+      white-space:normal!important;      /* Let rows grow vertically instead of clipping variable text. */
+      overflow:visible!important;
+      text-overflow:clip!important;
+      overflow-wrap:anywhere!important;
+      word-break:normal!important;
+      line-height:1.22!important;
+    }
+    html body #inactivePanel th button{
+      width:100%!important;
+      white-space:normal!important;      /* Long headers wrap naturally. */
+      overflow:visible!important;
+      text-overflow:clip!important;
+      line-height:1.12!important;
+    }
+    html body #inactivePanel th:nth-child(1),html body #inactivePanel td:nth-child(1){min-width:7ch!important}    /* Centro */
+    html body #inactivePanel th:nth-child(2),html body #inactivePanel td:nth-child(2){min-width:9ch!important}    /* Estado/días */
+    html body #inactivePanel th:nth-child(3),html body #inactivePanel td:nth-child(3){min-width:24ch!important}   /* Socio + contacto */
+    html body #inactivePanel th:nth-child(4),html body #inactivePanel td:nth-child(4){min-width:18ch!important}   /* Tarifa */
+    html body #inactivePanel th:nth-child(5),html body #inactivePanel td:nth-child(5){min-width:7ch!important}    /* Activa */
+    html body #inactivePanel th:nth-child(6),html body #inactivePanel td:nth-child(6){min-width:11ch!important}   /* Última clase */
+    html body #inactivePanel th:nth-child(7),html body #inactivePanel td:nth-child(7){min-width:12rem!important}  /* Acciones need enough room for workflow + profile buttons. */
+    html body #inactivePanel .client-link,
+    html body #inactivePanel .name,
+    html body #inactivePanel .contact,
+    html body #inactivePanel .muted{
+      max-width:100%!important;          /* Remove old ellipsis/clamp behavior on desktop. */
+      white-space:normal!important;
+      overflow:visible!important;
+      text-overflow:clip!important;
+      overflow-wrap:anywhere!important;
+    }
+    html body #inactivePanel .inactive-actions{
+      display:flex!important;            /* Keep workflow buttons usable while still wrapping if needed. */
+      align-items:center!important;
+      justify-content:flex-start!important;
+      gap:.4rem!important;
+      flex-wrap:wrap!important;
+    }
+    html body #inactivePanel .inactive-workflow-action,
+    html body #inactivePanel .inactive-profile-trigger{
+      width:auto!important;              /* Undo previous compact fixed action button. */
+      min-width:2.6rem!important;
+      max-width:none!important;
+      height:auto!important;
+      min-height:2rem!important;
+      padding:0 .65rem!important;
+      font-size:.72rem!important;
+    }
+  }
+</style>
   <div class="shell">
     <aside>
       <div class="brand">
