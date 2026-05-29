@@ -269,11 +269,8 @@ def _find_or_create_conversation_id(contact_id: str, token: str, location_id: st
 
 # -------------------- public API --------------------
 
-def conversation_url(domain: str, location_id: str, conversation_id: str) -> str:
-    return (
-        f"https://{domain}/v2/location/{location_id}/conversations/conversations/{conversation_id}"
-        f"?category=team-inbox&tab=unread"
-    )
+def conversation_url(domain: str, location_id: str, contact_id: str) -> str:
+    return f"https://{domain}/v2/location/{location_id}/contacts/detail/{contact_id}"
 
 
 def resolve_conversation(phone: str) -> dict:
@@ -291,25 +288,17 @@ def resolve_conversation(phone: str) -> dict:
     try:
         cached = _cache_get(con, key)
         contact_id = cached["contact_id"] if cached else ""
-        conversation_id = cached["conversation_id"] if cached else ""
 
         if not contact_id:
             contact_id = _find_contact_id(phone_e164, cfg["token"], cfg["location_id"], cfg["country_code"]) or ""
             if not contact_id:
                 return {"ok": False, "error": f"Contacto no encontrado en GHL para {phone_e164}"}
-
-        if not conversation_id:
-            conversation_id = _find_or_create_conversation_id(contact_id, cfg["token"], cfg["location_id"]) or ""
-            if not conversation_id:
-                return {"ok": False, "error": "No se pudo obtener/crear la conversación en GHL", "contact_id": contact_id}
-
-        _cache_upsert(con, key, contact_id, conversation_id)
+            _cache_upsert(con, key, contact_id, "")
     finally:
         con.close()
 
     return {
         "ok": True,
         "contact_id": contact_id,
-        "conversation_id": conversation_id,
-        "conversation_url": conversation_url(cfg["domain"], cfg["location_id"], conversation_id),
+        "conversation_url": conversation_url(cfg["domain"], cfg["location_id"], contact_id),
     }
