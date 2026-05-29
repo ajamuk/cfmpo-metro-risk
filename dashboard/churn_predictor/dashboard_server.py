@@ -2102,6 +2102,11 @@ INDEX_HTML = r"""<!doctype html>
     html body #injuriesPanel th:nth-child(7),html body #injuriesPanel td:nth-child(7){min-width:24ch!important}  /* Lesión */
     html body #injuriesPanel th:nth-child(8),html body #injuriesPanel td:nth-child(8){min-width:10ch!important}  /* Próximo contacto */
     html body #injuriesPanel th:nth-child(9),html body #injuriesPanel td:nth-child(9){min-width:24ch!important}  /* Última acción */
+    html body #injuriesPanel th:nth-child(10),html body #injuriesPanel td:nth-child(10){min-width:4.5rem!important;width:4.5rem!important;max-width:4.5rem!important;text-align:center!important} /* Acción compacta */
+    html body #injuriesPanel th:nth-child(10){font-size:0!important}
+    html body #injuriesPanel th:nth-child(10)::after{content:"⋯"!important;font-size:1rem!important;color:var(--cf-muted,#C3BFBE)!important}
+    html body #injuriesPanel td:nth-child(10) .action-menu-trigger{min-width:0!important;width:2.5rem!important;max-width:2.5rem!important;height:2rem!important;min-height:2rem!important;padding:0!important;margin:0 auto!important;border-radius:.5rem!important;font-size:0!important;box-shadow:none!important}
+    html body #injuriesPanel td:nth-child(10) .action-menu-trigger::before{content:"⋯"!important;font-size:1.2rem!important;line-height:1!important;color:#EAF4E2!important}
     html body #injuriesPanel td .name,
     html body #injuriesPanel td .muted,
     html body #injuriesPanel td .contact,
@@ -2295,6 +2300,7 @@ INDEX_HTML = r"""<!doctype html>
                 <th>Lesion</th>
                 <th><button type="button" data-injury-sort="next_contact">Proximo contacto</button></th>
                 <th><button type="button" data-injury-sort="latest_note">Última acción</button></th>
+                <th>Acción</th>
               </tr>
             </thead>
             <tbody id="injuryRows"></tbody>
@@ -2811,6 +2817,7 @@ INDEX_HTML = r"""<!doctype html>
       $('injuryCountLabel').textContent = `${filtered.length} visibles`;
       $('injuryEmpty').hidden = filtered.length !== 0;
       $('injuryRows').innerHTML = filtered.map((item) => {
+        const id = item.registro_id || item.registry_id || '';
         return `
         <tr>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
@@ -2822,6 +2829,7 @@ INDEX_HTML = r"""<!doctype html>
           <td><div class="name" title="${safe(item.description || '')}">${safe(item.description || '')}</div></td>
           <td>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</td>
           <td class="reasons" title="${safe(item.latest_note || '')}">${safe(item.latest_note || '')}</td>
+          <td>${injuryActionMenu(id, clientDataAttr(injuryClient(item)))}</td>
         </tr>`;
       }).join('');
     }
