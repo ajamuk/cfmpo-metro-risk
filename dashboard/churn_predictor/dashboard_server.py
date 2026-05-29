@@ -1494,27 +1494,25 @@ INDEX_HTML = r"""<!doctype html>
   }
 </style>
 
-<style id="injuries-fit-screen-label-narrow-20260529">
+<style id="injuries-fit-screen-no-action-20260529">
   @media(min-width:761px){
     body #injuriesPanel .table-wrap{overflow-x:hidden!important}
     body #injuriesPanel table{width:100%!important;min-width:0!important;table-layout:fixed!important;font-size:11.5px!important}
     body #injuriesPanel th,body #injuriesPanel td{padding-left:6px!important;padding-right:6px!important}
-    body #injuriesPanel th:nth-child(1),body #injuriesPanel td:nth-child(1){width:7%!important}
-    body #injuriesPanel th:nth-child(2),body #injuriesPanel td:nth-child(2){width:11%!important}
-    body #injuriesPanel th:nth-child(3),body #injuriesPanel td:nth-child(3){width:18%!important}
-    body #injuriesPanel th:nth-child(4),body #injuriesPanel td:nth-child(4){width:11%!important}
-    body #injuriesPanel th:nth-child(5),body #injuriesPanel td:nth-child(5){width:5%!important}
-    body #injuriesPanel th:nth-child(6),body #injuriesPanel td:nth-child(6){width:6%!important}
-    body #injuriesPanel th:nth-child(7),body #injuriesPanel td:nth-child(7){width:20%!important}
-    body #injuriesPanel th:nth-child(8),body #injuriesPanel td:nth-child(8){width:9%!important}
-    body #injuriesPanel th:nth-child(9),body #injuriesPanel td:nth-child(9){width:9%!important}
-    body #injuriesPanel th:nth-child(10),body #injuriesPanel td:nth-child(10){width:4%!important;min-width:50px!important;max-width:62px!important;text-align:center!important}
-    body #injuriesPanel th:nth-child(10){font-size:0!important}
-    body #injuriesPanel th:nth-child(10)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
+    body #injuriesPanel th:nth-child(1),body #injuriesPanel td:nth-child(1){width:8%!important}
+    body #injuriesPanel th:nth-child(2),body #injuriesPanel td:nth-child(2){width:12%!important}
+    body #injuriesPanel th:nth-child(3),body #injuriesPanel td:nth-child(3){width:20%!important}
+    body #injuriesPanel th:nth-child(4),body #injuriesPanel td:nth-child(4){width:12%!important}
+    body #injuriesPanel th:nth-child(5),body #injuriesPanel td:nth-child(5){width:6%!important}
+    body #injuriesPanel th:nth-child(6),body #injuriesPanel td:nth-child(6){width:7%!important}
+    body #injuriesPanel th:nth-child(7),body #injuriesPanel td:nth-child(7){width:21%!important}
+    body #injuriesPanel th:nth-child(8),body #injuriesPanel td:nth-child(8){width:7%!important}
+    body #injuriesPanel th:nth-child(9),body #injuriesPanel td:nth-child(9){width:7%!important}
+    body #injuriesPanel th:nth-child(9){font-size:inherit!important;text-align:left!important}
+    body #injuriesPanel th:nth-child(9)::after{display:none!important;content:""!important}
     body #injuriesPanel td:nth-child(6) .risk{display:none!important}
     body #injuriesPanel td:nth-child(6) .muted{display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
-    body #injuriesPanel .action-menu-trigger{min-width:0!important;width:38px!important;max-width:38px!important;height:30px!important;min-height:30px!important;padding:0!important;margin:0 auto!important;border-radius:8px!important;font-size:0!important;box-shadow:none!important}
-    body #injuriesPanel .action-menu-trigger::before{content:"⋯";font-size:19px!important;line-height:1!important;color:#EAF4E2!important}
+    body #injuriesPanel td:nth-child(7) .name,body #injuriesPanel td:nth-child(9).reasons{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;white-space:normal!important}
   }
 </style>
 
@@ -2195,7 +2193,6 @@ INDEX_HTML = r"""<!doctype html>
                 <th>Lesion</th>
                 <th><button type="button" data-injury-sort="next_contact">Proximo contacto</button></th>
                 <th><button type="button" data-injury-sort="latest_note">Última acción</button></th>
-                <th>Accion</th>
               </tr>
             </thead>
             <tbody id="injuryRows"></tbody>
@@ -2712,7 +2709,6 @@ INDEX_HTML = r"""<!doctype html>
       $('injuryCountLabel').textContent = `${filtered.length} visibles`;
       $('injuryEmpty').hidden = filtered.length !== 0;
       $('injuryRows').innerHTML = filtered.map((item) => {
-        const id = item.registro_id || item.registry_id || '';
         return `
         <tr>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
@@ -2724,7 +2720,6 @@ INDEX_HTML = r"""<!doctype html>
           <td><div class="name">${safe(item.description || '')}</div></td>
           <td>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</td>
           <td class="reasons">${safe(item.latest_note || '')}</td>
-          <td>${injuryActionMenu(id, clientDataAttr(injuryClient(item)))}</td>
         </tr>`;
       }).join('');
     }
