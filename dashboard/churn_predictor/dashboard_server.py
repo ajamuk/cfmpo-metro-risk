@@ -1815,8 +1815,8 @@ INDEX_HTML = r"""<!doctype html>
 
 <style id="inactive-like-injuries-view-20260526">
   body .mobile-inactive-summary{display:none}
-  body .inactive-profile-trigger{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%!important;min-height:38px!important;padding:0 14px!important;border:1px solid rgba(136,175,96,.62)!important;border-radius:14px!important;background:#22301D!important;color:#EAF4E2!important;font-weight:900!important;box-shadow:0 10px 24px rgba(0,0,0,.26)!important;cursor:pointer!important}
-  body .inactive-profile-trigger:hover{background:#2A3A22!important;border-color:rgba(166,201,119,.78)!important}
+  body .inactive-profile-trigger{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:100%!important;min-height:34px!important;padding:0 10px!important;border:1px solid rgba(136,175,96,.38)!important;border-radius:6px!important;background:transparent!important;color:#EAF4E2!important;font-weight:800!important;box-shadow:none!important;cursor:pointer!important}
+  body .inactive-profile-trigger:hover{background:rgba(136,175,96,.10)!important;border-color:rgba(166,201,119,.62)!important}
   @media(min-width:761px){
     body #inactivePanel table{min-width:1080px!important;table-layout:fixed!important}
     body #inactivePanel th:nth-child(1),body #inactivePanel td:nth-child(1){width:10%!important}
@@ -1828,7 +1828,7 @@ INDEX_HTML = r"""<!doctype html>
     body #inactivePanel th:nth-child(7),body #inactivePanel td:nth-child(7){width:5%!important;min-width:58px!important;max-width:72px!important;padding-left:5px!important;padding-right:5px!important;text-align:center!important}
     body #inactivePanel th:nth-child(7){font-size:0!important}
     body #inactivePanel th:nth-child(7)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
-    body #inactivePanel .inactive-profile-trigger{min-width:0!important;width:42px!important;max-width:42px!important;height:32px!important;min-height:32px!important;padding:0!important;margin:0 auto!important;border-radius:11px!important;font-size:0!important;box-shadow:none!important}
+    body #inactivePanel .inactive-profile-trigger{min-width:0!important;width:42px!important;max-width:42px!important;height:30px!important;min-height:30px!important;padding:0!important;margin:0 auto!important;border-radius:6px!important;font-size:0!important;box-shadow:none!important}
     body #inactivePanel .inactive-profile-trigger::before{content:"⋯";font-size:20px!important;line-height:1!important;color:#EAF4E2!important}
   }
   @media(max-width:760px){
@@ -1859,7 +1859,7 @@ INDEX_HTML = r"""<!doctype html>
     body #inactivePanel .mobile-meta span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
     body #inactivePanel .mobile-desc{font-size:12px!important;line-height:1.18!important;color:rgba(239,233,233,.88)!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
     body #inactivePanel .mobile-note{font-size:10.8px!important;line-height:1.12!important;color:rgba(195,191,190,.76)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0!important}
-    body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:10px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
+    body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:6px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
   }
 </style>
 
