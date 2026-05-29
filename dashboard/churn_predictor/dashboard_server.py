@@ -3365,6 +3365,7 @@ INDEX_HTML = r"""<!doctype html>
           return;
         } catch (err) { console.error(err); }
       }
+      closeActionMenu(); // Prompt fallback also dismisses the menu before asking for text.
       const note = prompt('Añadir nota al seguimiento del lesionado:');
       if (!note || !note.trim()) return;
       await postInjuryAction(button, 'api/injury-followup-note', 'Añadir nota', null, { note: note.trim() });
@@ -3373,6 +3374,7 @@ INDEX_HTML = r"""<!doctype html>
     async function postInjuryAction(button, endpoint, label, confirmText, extraPayload = {}) {
       const registryId = button.dataset.registryId;
       if (!registryId) return;
+      closeActionMenu(); // Close the floating menu immediately after choosing an action.
       if (confirmText && !confirm(confirmText)) return;
       button.disabled = true;
       button.textContent = 'Guardando...';
@@ -3382,9 +3384,10 @@ INDEX_HTML = r"""<!doctype html>
         if (!response.ok || !data.ok) throw new Error(data.error || 'No se pudo guardar');
         await loadData();
       } catch (error) {
+        alert(error.message);
+      } finally {
         button.disabled = false;
         button.textContent = label;
-        alert(error.message);
       }
     }
     function ensureGlobalActionMenu() {
