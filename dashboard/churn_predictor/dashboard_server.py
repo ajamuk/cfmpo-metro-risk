@@ -1494,6 +1494,30 @@ INDEX_HTML = r"""<!doctype html>
   }
 </style>
 
+<style id="injuries-fit-screen-label-narrow-20260529">
+  @media(min-width:761px){
+    body #injuriesPanel .table-wrap{overflow-x:hidden!important}
+    body #injuriesPanel table{width:100%!important;min-width:0!important;table-layout:fixed!important;font-size:11.5px!important}
+    body #injuriesPanel th,body #injuriesPanel td{padding-left:6px!important;padding-right:6px!important}
+    body #injuriesPanel th:nth-child(1),body #injuriesPanel td:nth-child(1){width:7%!important}
+    body #injuriesPanel th:nth-child(2),body #injuriesPanel td:nth-child(2){width:11%!important}
+    body #injuriesPanel th:nth-child(3),body #injuriesPanel td:nth-child(3){width:18%!important}
+    body #injuriesPanel th:nth-child(4),body #injuriesPanel td:nth-child(4){width:11%!important}
+    body #injuriesPanel th:nth-child(5),body #injuriesPanel td:nth-child(5){width:5%!important}
+    body #injuriesPanel th:nth-child(6),body #injuriesPanel td:nth-child(6){width:6%!important}
+    body #injuriesPanel th:nth-child(7),body #injuriesPanel td:nth-child(7){width:20%!important}
+    body #injuriesPanel th:nth-child(8),body #injuriesPanel td:nth-child(8){width:9%!important}
+    body #injuriesPanel th:nth-child(9),body #injuriesPanel td:nth-child(9){width:9%!important}
+    body #injuriesPanel th:nth-child(10),body #injuriesPanel td:nth-child(10){width:4%!important;min-width:50px!important;max-width:62px!important;text-align:center!important}
+    body #injuriesPanel th:nth-child(10){font-size:0!important}
+    body #injuriesPanel th:nth-child(10)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
+    body #injuriesPanel td:nth-child(6) .risk{display:none!important}
+    body #injuriesPanel td:nth-child(6) .muted{display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
+    body #injuriesPanel .action-menu-trigger{min-width:0!important;width:38px!important;max-width:38px!important;height:30px!important;min-height:30px!important;padding:0!important;margin:0 auto!important;border-radius:8px!important;font-size:0!important;box-shadow:none!important}
+    body #injuriesPanel .action-menu-trigger::before{content:"⋯";font-size:19px!important;line-height:1!important;color:#EAF4E2!important}
+  }
+</style>
+
 <style id="plain-table-headers-final">
   body th{background:rgba(18,18,18,.96)!important;color:rgba(239,233,233,.82)!important;border-bottom:1px solid rgba(239,233,233,.12)!important}
   body th button,body th button[data-sort],body th button[data-injury-sort],body th button[data-pending-sort],body th button[data-deleted-sort]{appearance:none!important;display:block!important;width:100%!important;min-height:0!important;height:auto!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:inherit!important;font:inherit!important;font-weight:950!important;text-align:left!important;text-transform:uppercase!important;letter-spacing:.06em!important;line-height:1.15!important;white-space:normal!important;cursor:pointer!important}
