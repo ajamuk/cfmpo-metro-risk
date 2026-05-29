@@ -1819,17 +1819,15 @@ INDEX_HTML = r"""<!doctype html>
   body .inactive-profile-trigger:hover{background:#2A3A22!important;border-color:rgba(166,201,119,.78)!important}
   @media(min-width:761px){
     body #inactivePanel table{min-width:1080px!important;table-layout:fixed!important}
-    body #inactivePanel th:nth-child(1),body #inactivePanel td:nth-child(1){width:8%!important}
-    body #inactivePanel th:nth-child(2),body #inactivePanel td:nth-child(2){width:12%!important}
-    body #inactivePanel th:nth-child(3),body #inactivePanel td:nth-child(3){width:18%!important}
-    body #inactivePanel th:nth-child(4),body #inactivePanel td:nth-child(4){width:14%!important}
-    body #inactivePanel th:nth-child(5),body #inactivePanel td:nth-child(5){width:9%!important}
-    body #inactivePanel th:nth-child(6),body #inactivePanel td:nth-child(6){width:11%!important}
-    body #inactivePanel th:nth-child(7),body #inactivePanel td:nth-child(7){width:7%!important}
-    body #inactivePanel th:nth-child(8),body #inactivePanel td:nth-child(8){width:17%!important}
-    body #inactivePanel th:nth-child(9),body #inactivePanel td:nth-child(9){width:4%!important;min-width:58px!important;max-width:72px!important;padding-left:5px!important;padding-right:5px!important;text-align:center!important}
-    body #inactivePanel th:nth-child(9){font-size:0!important}
-    body #inactivePanel th:nth-child(9)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
+    body #inactivePanel th:nth-child(1),body #inactivePanel td:nth-child(1){width:10%!important}
+    body #inactivePanel th:nth-child(2),body #inactivePanel td:nth-child(2){width:15%!important}
+    body #inactivePanel th:nth-child(3),body #inactivePanel td:nth-child(3){width:26%!important}
+    body #inactivePanel th:nth-child(4),body #inactivePanel td:nth-child(4){width:20%!important}
+    body #inactivePanel th:nth-child(5),body #inactivePanel td:nth-child(5){width:11%!important}
+    body #inactivePanel th:nth-child(6),body #inactivePanel td:nth-child(6){width:13%!important}
+    body #inactivePanel th:nth-child(7),body #inactivePanel td:nth-child(7){width:5%!important;min-width:58px!important;max-width:72px!important;padding-left:5px!important;padding-right:5px!important;text-align:center!important}
+    body #inactivePanel th:nth-child(7){font-size:0!important}
+    body #inactivePanel th:nth-child(7)::after{content:"⋯";font-size:16px!important;color:var(--cf-muted,#C3BFBE)!important}
     body #inactivePanel .inactive-profile-trigger{min-width:0!important;width:42px!important;max-width:42px!important;height:32px!important;min-height:32px!important;padding:0!important;margin:0 auto!important;border-radius:11px!important;font-size:0!important;box-shadow:none!important}
     body #inactivePanel .inactive-profile-trigger::before{content:"⋯";font-size:20px!important;line-height:1!important;color:#EAF4E2!important}
   }
@@ -1850,18 +1848,15 @@ INDEX_HTML = r"""<!doctype html>
     body #inactivePanel tbody tr > td:nth-child(2),
     body #inactivePanel tbody tr > td:nth-child(4),
     body #inactivePanel tbody tr > td:nth-child(5),
-    body #inactivePanel tbody tr > td:nth-child(6),
-    body #inactivePanel tbody tr > td:nth-child(7),
-    body #inactivePanel tbody tr > td:nth-child(8){display:none!important;position:absolute!important;visibility:hidden!important;inset:auto!important;width:0!important;height:0!important;max-height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden!important;grid-row:auto!important;grid-column:auto!important}
+    body #inactivePanel tbody tr > td:nth-child(6){display:none!important;position:absolute!important;visibility:hidden!important;inset:auto!important;width:0!important;height:0!important;max-height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden!important;grid-row:auto!important;grid-column:auto!important}
     body #inactivePanel tbody tr > td:nth-child(3){display:block!important;position:static!important;visibility:visible!important;grid-column:1!important;grid-row:1!important;width:100%!important;overflow:visible!important}
-    body #inactivePanel tbody tr > td:nth-child(9){display:block!important;position:static!important;visibility:visible!important;grid-column:1!important;grid-row:2!important;width:100%!important;overflow:visible!important}
+    body #inactivePanel tbody tr > td:nth-child(7){display:block!important;position:static!important;visibility:visible!important;grid-column:1!important;grid-row:2!important;width:100%!important;overflow:visible!important}
     body #inactivePanel td::before{display:none!important;content:""!important}
     body #inactivePanel .client-link{font-size:15px!important;line-height:1.08!important;font-weight:950!important;display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0 0 5px!important;text-decoration:none!important;color:var(--cf-text,#EFE9E9)!important;background:transparent!important;border:0!important;padding:0!important;min-height:0!important}
     body #inactivePanel td:nth-child(3) > .contact{display:none!important}
     body #inactivePanel .mobile-inactive-summary{display:grid!important;gap:5px!important;min-width:0!important}
     body #inactivePanel .mobile-meta{display:flex!important;align-items:center!important;gap:6px!important;min-width:0!important;overflow:hidden!important;color:rgba(195,191,190,.78)!important;font-size:10.8px!important;line-height:1.05!important;white-space:nowrap!important}
-    body #inactivePanel .mobile-meta span:not(.risk){min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
-    body #inactivePanel .mobile-meta .risk{flex:0 0 auto!important;min-height:20px!important;line-height:18px!important;font-size:9px!important;padding:0 7px!important}
+    body #inactivePanel .mobile-meta span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
     body #inactivePanel .mobile-desc{font-size:12px!important;line-height:1.18!important;color:rgba(239,233,233,.88)!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
     body #inactivePanel .mobile-note{font-size:10.8px!important;line-height:1.12!important;color:rgba(195,191,190,.76)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;margin:0!important}
     body #inactivePanel .inactive-profile-trigger{width:100%!important;max-width:100%!important;min-width:0!important;height:30px!important;min-height:30px!important;border-radius:10px!important;font-size:11px!important;box-shadow:none!important;margin-top:1px!important;box-sizing:border-box!important}
@@ -2155,8 +2150,6 @@ INDEX_HTML = r"""<!doctype html>
                 <th><button type="button" data-inactive-sort="membership_name">Tarifa</button></th>
                 <th><button type="button" data-inactive-sort="membership_active">Activa</button></th>
                 <th><button type="button" data-inactive-sort="last_class_at">Última clase</button></th>
-                <th><button type="button" data-inactive-sort="weekly_average">Media</button></th>
-                <th><button type="button" data-inactive-sort="contact_action">Decisión</button></th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -2651,7 +2644,7 @@ INDEX_HTML = r"""<!doctype html>
       const filtered = state.inactiveMembers.filter((item) => {
         const searching = Boolean(query);
         const centerOk = searching || item.center === state.inactiveCenter;
-        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket} ${item.contact_action} ${item.contact_reason}`.toLowerCase();
+        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket}`.toLowerCase();
         return centerOk && (!query || haystack.includes(query));
       }).sort(compareInactive);
       updateSortHeaders('[data-inactive-sort]', state.inactiveSortKey, state.inactiveSortDir);
@@ -2664,20 +2657,18 @@ INDEX_HTML = r"""<!doctype html>
         const clientData = clientDataAttr(inactiveClient(item));
         return `
         <tr>
-          <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
-          <td><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
-          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${ghlButton(item.phone)}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div><div class="mobile-inactive-summary"><div class="mobile-meta"><span class="risk ${inactiveClass(item.bucket)}">${safe(item.bucket || '')}</span><span>${safe(item.phone || item.email || 'Sin contacto')}</span><span>${safe(item.membership_name || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</span></div><div class="mobile-desc">${safe(inactiveSummary(item))}</div><div class="mobile-note">${safe(item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos')}</div></div></td>
+          <td>${safe(item.center || '')}</td>
+          <td><strong>${safe(item.bucket || '')}</strong><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
+          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${ghlButton(item.phone)}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div><div class="mobile-inactive-summary"><div class="mobile-meta"><span>${safe(item.bucket || '')}</span><span>${safe(item.phone || item.email || 'Sin contacto')}</span><span>${safe(item.membership_name || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</span></div><div class="mobile-desc">${safe(inactiveSummary(item))}</div><div class="mobile-note">${safe(item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos')}</div></div></td>
           <td><div class="name">${safe(item.membership_name || 'Sin datos')}</div></td>
-          <td><span class="risk ${item.membership_active ? 'Bajo' : 'Sin.fecha'}">${item.membership_active ? 'Sí' : 'No'}</span><div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
+          <td>${item.membership_active ? 'Sí' : 'No'}<div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
-          <td>${item.weekly_average === null || item.weekly_average === undefined ? '—' : safe(item.weekly_average)}</td>
-          <td class="reasons"><span class="risk ${contactActionClass(item.contact_action)}">${safe(item.contact_action || 'Revisar')}</span><div class="muted">${safe(item.contact_reason || '')}</div></td>
           <td><button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button></td>
         </tr>`;
       }).join('');
     }
     function inactiveClient(item) {
-      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', contact_action: item.contact_action || '', contact_reason: item.contact_reason || '', message_template: item.message_template || '', source: 'inactividad-aimharder' };
+      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', source: 'inactividad-aimharder' };
     }
     function inactiveDaysText(value) {
       if (value === null || value === undefined || value === '') return 'sin clase registrada';
@@ -2687,20 +2678,7 @@ INDEX_HTML = r"""<!doctype html>
       const lastClass = formatDateEs(item.last_class_at) || 'sin clase registrada';
       const days = inactiveDaysText(item.days_without_class);
       const tariff = item.membership_name || 'sin tarifa detectada';
-      const avg = item.weekly_average === null || item.weekly_average === undefined ? 'sin media semanal' : `media ${item.weekly_average}/semana`;
-      return `${days} sin venir · última clase: ${lastClass} · ${tariff} · ${avg}`;
-    }
-    function inactiveClass(value) {
-      if (value === '31+ días') return 'Alto';
-      if (value === '22-30 días') return 'Medio';
-      if (value === 'Sin registro') return 'Sin.fecha';
-      return 'Bajo';
-    }
-    function contactActionClass(value) {
-      if (value === 'Escribir') return 'Alto';
-      if (value === 'Esperar') return 'Medio';
-      if (value === 'No escribir') return 'Sin.fecha';
-      return 'Bajo';
+      return `${days} sin venir · última clase: ${lastClass} · ${tariff}`;
     }
 
     function renderTariffs() {
@@ -2816,7 +2794,7 @@ INDEX_HTML = r"""<!doctype html>
       const key = state.inactiveSortKey;
       let av = a[key] ?? '';
       let bv = b[key] ?? '';
-      if (key === 'days_without_class' || key === 'weekly_average') {
+      if (key === 'days_without_class') {
         av = av === null || av === undefined || av === '' ? -1 : Number(av);
         bv = bv === null || bv === undefined || bv === '' ? -1 : Number(bv);
         return (av - bv) * dir;
@@ -3133,7 +3111,7 @@ INDEX_HTML = r"""<!doctype html>
           state.inactiveSortDir = state.inactiveSortDir === 'desc' ? 'asc' : 'desc';
         } else {
           state.inactiveSortKey = button.dataset.inactiveSort;
-          state.inactiveSortDir = state.inactiveSortKey === 'weekly_average' ? 'desc' : 'asc';
+          state.inactiveSortDir = 'asc';
         }
         renderInactive();
       });
