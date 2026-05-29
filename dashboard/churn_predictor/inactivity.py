@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import unicodedata
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -112,7 +113,7 @@ def _inactive_rows_for_center(clients: List[Dict[str, Any]], center: CenterConfi
             continue
         if _expired_class_pack(signal):
             continue
-        out.append({
+        row = {
             "id": client_id,
             "name": name,
             "center": center.name,
@@ -127,8 +128,78 @@ def _inactive_rows_for_center(clients: List[Dict[str, Any]], center: CenterConfi
             "weekly_average": signal.weekly_average,
             "membership_active": _membership_active(signal),
             "source": "AimHarder /clients/no-booking",
-        })
+        }
+        row.update(_contact_decision(row, signal))
+        out.append(row)
     return out
+
+
+def _contact_decision(row: Dict[str, Any], signal: LocalSignals, today: date | None = None) -> dict:
+    today = today or date.today()
+    membership = str(row.get("membership_name") or signal.membership_name or "").strip()
+    normalized_membership = _norm_text(membership)
+    days = row.get("days_without_class")
+    has_phone = bool(str(row.get("phone") or "").strip())
+    active = bool(row.get("membership_active"))
+
+    if not has_phone:
+        return _decision("No escribir", "Baja", "Sin teléfono", "")
+
+    if _is_freeze(normalized_membership):
+        if _is_last_week_of_month(today):
+            return _decision(
+                "Escribir",
+                "Media",
+                "Congelación: última semana del mes, preguntar si quiere reactivarse",
+                "Hola {nombre}, soy del equipo de CrossFit Metropolitano. Como termina el mes, quería preguntarte si tienes previsto reactivar tu tarifa para volver a entrenar en {centro}. ¿Te ayudo con la vuelta?",
+            )
+        return _decision("Esperar", "Baja", "Congelación: escribir solo la última semana del mes", "")
+
+    if not membership:
+        return _decision("Revisar", "Media", "Sin tarifa detectada", "")
+
+    if not active:
+        return _decision("Revisar", "Baja", "Tarifa no confirmada por pagos", "")
+
+    if _is_class_pack(membership):
+        return _decision("Revisar", "Baja", "Bono 10 clases: revisar consumo/caducidad antes de escribir", "")
+
+    if days is None:
+        return _decision("Revisar", "Media", "Sin fecha de última clase", "")
+
+    if isinstance(days, int) and 8 <= days <= 14:
+        return _decision(
+            "Escribir",
+            "Alta",
+            "Tarifa activa y 8-14 días sin venir",
+            "Hola {nombre}, soy del equipo de CrossFit Metropolitano. Hemos visto que llevas unos días sin venir a entrenar y queríamos saber si está todo bien. ¿Necesitas que te ayudemos a retomar esta semana?",
+        )
+    if isinstance(days, int) and 15 <= days <= 30:
+        return _decision(
+            "Escribir",
+            "Media",
+            "Tarifa activa y 15-30 días sin venir",
+            "Hola {nombre}, soy del equipo de CrossFit Metropolitano. Hace ya unas semanas que no te vemos entrenar y queríamos saber cómo estás. ¿Te viene bien que busquemos una forma sencilla de retomar?",
+        )
+    return _decision("Revisar", "Baja", "31+ días sin venir: revisar caso antes de escribir", "")
+
+
+def _decision(action: str, priority: str, reason: str, message_template: str) -> dict:
+    return {
+        "contact_action": action,
+        "contact_priority": priority,
+        "contact_reason": reason,
+        "message_template": message_template,
+    }
+
+
+def _is_freeze(normalized_membership: str) -> bool:
+    return "congelacion" in normalized_membership or "congelación" in normalized_membership
+
+
+def _is_last_week_of_month(value: date) -> bool:
+    last_day = monthrange(value.year, value.month)[1]
+    return value.day >= last_day - 6
 
 
 def _kpis(rows: List[Dict[str, Any]]) -> dict:

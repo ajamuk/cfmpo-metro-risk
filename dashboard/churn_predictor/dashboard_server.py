@@ -2164,7 +2164,7 @@ INDEX_HTML = r"""<!doctype html>
                 <th><button type="button" data-inactive-sort="membership_active">Activa</button></th>
                 <th><button type="button" data-inactive-sort="last_class_at">Última clase</button></th>
                 <th><button type="button" data-inactive-sort="weekly_average">Media</button></th>
-                <th><button type="button" data-inactive-sort="bucket">Detalle</button></th>
+                <th><button type="button" data-inactive-sort="contact_action">Decisión</button></th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -2661,7 +2661,7 @@ INDEX_HTML = r"""<!doctype html>
         const searching = Boolean(query);
         const centerOk = searching || item.center === state.inactiveCenter;
         const bucketOk = state.inactiveBucket === 'Todos' || item.bucket === state.inactiveBucket;
-        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket}`.toLowerCase();
+        const haystack = `${item.center} ${item.name} ${item.phone} ${item.email} ${item.membership_name} ${item.bucket} ${item.contact_action} ${item.contact_priority} ${item.contact_reason}`.toLowerCase();
         return centerOk && bucketOk && (!query || haystack.includes(query));
       }).sort(compareInactive);
       updateSortHeaders('[data-inactive-sort]', state.inactiveSortKey, state.inactiveSortDir);
@@ -2681,13 +2681,13 @@ INDEX_HTML = r"""<!doctype html>
           <td><span class="risk ${item.membership_active ? 'Bajo' : 'Sin.fecha'}">${item.membership_active ? 'Sí' : 'No'}</span><div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
           <td>${item.weekly_average === null || item.weekly_average === undefined ? '—' : safe(item.weekly_average)}</td>
-          <td class="reasons">${safe(inactiveSummary(item))}</td>
+          <td class="reasons"><span class="risk ${contactActionClass(item.contact_action)}">${safe(item.contact_action || 'Revisar')}</span><div class="muted">${safe([item.contact_priority, item.contact_reason].filter(Boolean).join(' · '))}</div></td>
           <td><button class="inactive-profile-trigger" type="button" data-client='${clientData}'>Perfil</button></td>
         </tr>`;
       }).join('');
     }
     function inactiveClient(item) {
-      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', source: 'inactividad-aimharder' };
+      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', contact_action: item.contact_action || '', contact_priority: item.contact_priority || '', contact_reason: item.contact_reason || '', message_template: item.message_template || '', source: 'inactividad-aimharder' };
     }
     function inactiveDaysText(value) {
       if (value === null || value === undefined || value === '') return 'sin clase registrada';
@@ -2704,6 +2704,12 @@ INDEX_HTML = r"""<!doctype html>
       if (value === '31+ días') return 'Alto';
       if (value === '22-30 días') return 'Medio';
       if (value === 'Sin registro') return 'Sin.fecha';
+      return 'Bajo';
+    }
+    function contactActionClass(value) {
+      if (value === 'Escribir') return 'Alto';
+      if (value === 'Esperar') return 'Medio';
+      if (value === 'No escribir') return 'Sin.fecha';
       return 'Bajo';
     }
 
