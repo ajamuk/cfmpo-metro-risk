@@ -13,11 +13,13 @@ mkdir -p "${APP_DIR}"
 rsync -a --delete \
   --exclude ".git" \
   --exclude ".env" \
+  --exclude ".aimharder_tokens.json" \
   --exclude "data" \
   --exclude "__pycache__" \
   --exclude "logs" \
   --exclude "reports/*.html" \
   --exclude "reports/*.csv" \
+  --exclude "reports/*.json" \
   ./ "${APP_DIR}/"
 
 chown -R www-data:www-data "${APP_DIR}"

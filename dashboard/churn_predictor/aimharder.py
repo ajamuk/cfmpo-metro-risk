@@ -79,12 +79,22 @@ class AimHarderClient:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="replace")
-            if exc.code == 410 and retry_refresh and self.center.refresh_token:
-                self.center = self._refresh_tokens()
+            if self._should_refresh_token(exc.code, body) and retry_refresh and self.center.refresh_token:
+                try:
+                    self.center = self._refresh_tokens()
+                except AimHarderError as refresh_exc:
+                    raise AimHarderError(f"{self.center.name}: token caducado y no se pudo renovar: {refresh_exc}") from refresh_exc
                 return self._get(path, params=params, retry_refresh=False)
             raise AimHarderError(f"{self.center.name}: API {exc.code} en {path}: {body}") from exc
         except urllib.error.URLError as exc:
             raise AimHarderError(f"{self.center.name}: no se pudo conectar con AimHarder: {exc}") from exc
+
+    @staticmethod
+    def _should_refresh_token(status_code: int, body: str) -> bool:
+        if status_code == 410:
+            return True
+        normalized = str(body or "").lower()
+        return status_code == 400 and "token has expired" in normalized
 
     def _refresh_tokens(self) -> CenterConfig:
         request = urllib.request.Request(
@@ -96,8 +106,14 @@ class AimHarderClient:
                 "User-Agent": "crossfit-metropolitano-churn/1.0",
             },
         )
-        with urllib.request.urlopen(request, timeout=45) as response:
-            payload = json.loads(response.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            raise AimHarderError(f"API {exc.code} en /auth/tokens/refresh: {body}") from exc
+        except urllib.error.URLError as exc:
+            raise AimHarderError(f"no se pudo conectar con AimHarder para refrescar token: {exc}") from exc
         access = payload.get("access-token")
         refresh = payload.get("refresh-token")
         if not access:

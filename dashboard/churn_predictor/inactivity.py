@@ -64,6 +64,14 @@ def refresh_inactive_members(path: Path = CACHE_PATH) -> dict:
         rows.extend(_inactive_rows_for_center(clients, fresh_center, signals))
 
     rows.sort(key=lambda item: (item.get("center") or "", _sort_days(item), item.get("name") or ""))
+    full_refresh_failed = bool(settings.centers) and len(errors) == len(settings.centers) and not rows
+    if full_refresh_failed and path.exists():
+        cached = load_inactive_members_cache(path)
+        cached["errors"] = errors
+        cached["last_refresh_failed_at"] = datetime.now().strftime("%d/%m/%Y %H:%M")
+        cached["stale"] = True
+        return cached
+
     payload = {
         "generated_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "threshold_days": THRESHOLD_DAYS,
@@ -71,6 +79,7 @@ def refresh_inactive_members(path: Path = CACHE_PATH) -> dict:
         "errors": errors,
         "centers": _center_counts(rows),
         "kpis": _kpis(rows),
+        "stale": False,
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
