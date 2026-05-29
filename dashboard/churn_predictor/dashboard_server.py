@@ -1498,21 +1498,27 @@ INDEX_HTML = r"""<!doctype html>
   @media(min-width:761px){
     body #injuriesPanel .table-wrap{overflow-x:hidden!important}
     body #injuriesPanel table{width:100%!important;min-width:0!important;table-layout:fixed!important;font-size:11.5px!important}
-    body #injuriesPanel th,body #injuriesPanel td{padding-left:6px!important;padding-right:6px!important}
-    body #injuriesPanel th:nth-child(1),body #injuriesPanel td:nth-child(1){width:8%!important}
-    body #injuriesPanel th:nth-child(2),body #injuriesPanel td:nth-child(2){width:12%!important}
-    body #injuriesPanel th:nth-child(3),body #injuriesPanel td:nth-child(3){width:20%!important}
-    body #injuriesPanel th:nth-child(4),body #injuriesPanel td:nth-child(4){width:12%!important}
-    body #injuriesPanel th:nth-child(5),body #injuriesPanel td:nth-child(5){width:6%!important}
-    body #injuriesPanel th:nth-child(6),body #injuriesPanel td:nth-child(6){width:7%!important}
-    body #injuriesPanel th:nth-child(7),body #injuriesPanel td:nth-child(7){width:21%!important}
-    body #injuriesPanel th:nth-child(8),body #injuriesPanel td:nth-child(8){width:7%!important}
-    body #injuriesPanel th:nth-child(9),body #injuriesPanel td:nth-child(9){width:7%!important}
-    body #injuriesPanel th:nth-child(9){font-size:inherit!important;text-align:left!important}
+    body #injuriesPanel th,body #injuriesPanel td{padding-left:6px!important;padding-right:6px!important;vertical-align:top!important}
+    body #injuriesPanel th button{line-height:1.12!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+    body #injuriesPanel th:nth-child(1),body #injuriesPanel td:nth-child(1){width:6%!important}
+    body #injuriesPanel th:nth-child(2),body #injuriesPanel td:nth-child(2){width:11%!important}
+    body #injuriesPanel th:nth-child(3),body #injuriesPanel td:nth-child(3){width:19%!important}
+    body #injuriesPanel th:nth-child(4),body #injuriesPanel td:nth-child(4){width:10%!important}
+    body #injuriesPanel th:nth-child(5),body #injuriesPanel td:nth-child(5){width:4%!important}
+    body #injuriesPanel th:nth-child(6),body #injuriesPanel td:nth-child(6){width:5%!important}
+    body #injuriesPanel th:nth-child(7),body #injuriesPanel td:nth-child(7){width:22%!important}
+    body #injuriesPanel th:nth-child(8),body #injuriesPanel td:nth-child(8){width:8%!important}
+    body #injuriesPanel th:nth-child(9),body #injuriesPanel td:nth-child(9){width:15%!important}
+    body #injuriesPanel th:nth-child(9){font-size:inherit!important;text-align:left!important;white-space:normal!important}
     body #injuriesPanel th:nth-child(9)::after{display:none!important;content:""!important}
     body #injuriesPanel td:nth-child(6) .risk{display:none!important}
     body #injuriesPanel td:nth-child(6) .muted{display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
-    body #injuriesPanel td:nth-child(7) .name,body #injuriesPanel td:nth-child(9).reasons{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;white-space:normal!important}
+    body #injuriesPanel td:nth-child(7) .name{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;white-space:normal!important}
+    body #injuriesPanel td:nth-child(9).reasons{display:block!important;white-space:normal!important;overflow:visible!important;max-height:none!important;line-height:1.22!important}
+    body #injuriesPanel td:nth-child(1),body #injuriesPanel td:nth-child(5),body #injuriesPanel td:nth-child(6),body #injuriesPanel td:nth-child(8){font-size:11px!important}
+  }
+  @media(max-width:760px){
+    body #injuriesPanel td:nth-child(9)::before{content:"Última acción"!important;display:block!important}
   }
 </style>
 
@@ -2717,9 +2723,9 @@ INDEX_HTML = r"""<!doctype html>
           <td><span class="risk ${item.membership_name || item.tariff ? 'Bajo' : 'Sin.fecha'}">${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><div class="muted">${safe(item.last_membership_payment_date ? 'último pago ' + formatDateEs(item.last_membership_payment_date) : '')}</div></td>
           <td>${safe(item.type || '')}</td>
           <td><span class="risk ${item.label ? 'Bajo' : 'Sin.fecha'}">${item.label ? 'Sí' : 'No'}</span><div class="muted">${safe(item.label || 'Sin etiqueta')}</div></td>
-          <td><div class="name">${safe(item.description || '')}</div></td>
+          <td><div class="name" title="${safe(item.description || '')}">${safe(item.description || '')}</div></td>
           <td>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</td>
-          <td class="reasons">${safe(item.latest_note || '')}</td>
+          <td class="reasons" title="${safe(item.latest_note || '')}">${safe(item.latest_note || '')}</td>
         </tr>`;
       }).join('');
     }
