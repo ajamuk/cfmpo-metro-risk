@@ -2704,8 +2704,8 @@ INDEX_HTML = r"""<!doctype html>
         return `
         <tr>
           <td>${safe(item.center || '')}</td>
-          <td><strong>${safe(item.bucket || '')}</strong><div class="muted">${safe(inactiveDaysText(item.days_without_class))}</div></td>
-          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${ghlButton(item.phone)}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div><div class="mobile-inactive-summary"><div class="mobile-meta"><span>${safe(item.bucket || '')}</span><span>${safe(item.phone || item.email || 'Sin contacto')}</span><span>${safe(item.membership_name || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</span></div><div class="mobile-desc">${safe(inactiveSummary(item))}</div><div class="mobile-note">${safe(item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos')}</div></div></td>
+          <td>${safe(inactiveDaysText(item.days_without_class))}</td>
+          <td><button class="client-link" type="button" data-client='${clientData}'>${safe(item.name)}</button><div class="contact">${safe(item.phone || '')}${ghlButton(item.phone)}${item.phone && item.email ? '<br>' : ''}${safe(item.email || '')}</div><div class="mobile-inactive-summary"><div class="mobile-meta"><span>${safe(inactiveDaysText(item.days_without_class))}</span><span>${safe(item.phone || item.email || 'Sin contacto')}</span><span>${safe(item.membership_name || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</span></div><div class="mobile-desc">${safe(inactiveSummary(item))}</div><div class="mobile-note">${safe(item.membership_active ? 'tarifa activa detectada' : 'tarifa no confirmada por pagos')}</div></div></td>
           <td><div class="name">${safe(item.membership_name || 'Sin datos')}</div></td>
           <td>${item.membership_active ? 'Sí' : 'No'}<div class="muted">${item.membership_active ? 'detectada por pagos' : 'no confirmada'}</div></td>
           <td>${safe(formatDateEs(item.last_class_at) || 'Sin registro')}</td>
