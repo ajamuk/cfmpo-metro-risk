@@ -2046,6 +2046,82 @@ INDEX_HTML = r"""<!doctype html>
     html body #injuriesPanel td:nth-child(9).reasons{display:block!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-height:none!important;line-height:1.25!important}
   }
 </style>
+
+<style id="injuries-auto-layout-final-20260529">
+  /* Desktop/tablet: let the browser size columns from real content instead of forced percentages. */
+  @media(min-width:761px){
+    html body #injuriesPanel .table-wrap{
+      width:100%!important;              /* Fill all available panel width. */
+      max-width:100%!important;
+      overflow-x:auto!important;         /* Only appears if readable minimums exceed viewport. */
+      overflow-y:auto!important;         /* Keep vertical scrolling inside the table area. */
+      max-height:calc(100vh - 18rem)!important;
+    }
+    html body #injuriesPanel table{
+      width:100%!important;              /* Table expands to the full container. */
+      min-width:fit-content!important;   /* But can grow if content genuinely needs more room. */
+      table-layout:auto!important;       /* Content-driven column sizing. */
+      border-collapse:separate!important;
+      border-spacing:0!important;
+      font-size:clamp(.68rem,.72vw,.78rem)!important;
+    }
+    html body #injuriesPanel thead th{
+      position:sticky!important;         /* Header remains visible during contained vertical scroll. */
+      top:0!important;
+      z-index:5!important;
+      background:rgba(18,18,18,.98)!important;
+    }
+    html body #injuriesPanel th,
+    html body #injuriesPanel td{
+      width:auto!important;              /* Reset old hardcoded width percentages. */
+      min-width:0!important;
+      max-width:none!important;
+      box-sizing:border-box!important;
+      padding:.48rem .55rem!important;
+      vertical-align:top!important;
+      white-space:normal!important;      /* Allow rows to grow vertically rather than cutting text. */
+      overflow:visible!important;
+      text-overflow:clip!important;
+      overflow-wrap:anywhere!important;
+      word-break:normal!important;
+      line-height:1.22!important;
+    }
+    html body #injuriesPanel th button{
+      width:100%!important;
+      white-space:normal!important;      /* Headers can wrap instead of being truncated. */
+      overflow:visible!important;
+      text-overflow:clip!important;
+      line-height:1.12!important;
+    }
+    html body #injuriesPanel th:nth-child(1),html body #injuriesPanel td:nth-child(1){min-width:5ch!important}   /* Centro */
+    html body #injuriesPanel th:nth-child(2),html body #injuriesPanel td:nth-child(2){min-width:10ch!important}  /* Seguimiento */
+    html body #injuriesPanel th:nth-child(3),html body #injuriesPanel td:nth-child(3){min-width:18ch!important}  /* Socio */
+    html body #injuriesPanel th:nth-child(4),html body #injuriesPanel td:nth-child(4){min-width:14ch!important}  /* Tarifa */
+    html body #injuriesPanel th:nth-child(5),html body #injuriesPanel td:nth-child(5){min-width:4ch!important}   /* Tipo */
+    html body #injuriesPanel th:nth-child(6),html body #injuriesPanel td:nth-child(6){min-width:8ch!important}   /* Etiqueta */
+    html body #injuriesPanel th:nth-child(7),html body #injuriesPanel td:nth-child(7){min-width:24ch!important}  /* Lesión */
+    html body #injuriesPanel th:nth-child(8),html body #injuriesPanel td:nth-child(8){min-width:10ch!important}  /* Próximo contacto */
+    html body #injuriesPanel th:nth-child(9),html body #injuriesPanel td:nth-child(9){min-width:24ch!important}  /* Última acción */
+    html body #injuriesPanel td .name,
+    html body #injuriesPanel td .muted,
+    html body #injuriesPanel td .contact,
+    html body #injuriesPanel td.reasons,
+    html body #injuriesPanel td:nth-child(7) .name,
+    html body #injuriesPanel td:nth-child(9).reasons{
+      display:block!important;           /* Remove old line-clamp/pill constraints. */
+      max-width:100%!important;
+      max-height:none!important;
+      white-space:normal!important;
+      overflow:visible!important;
+      text-overflow:clip!important;
+      -webkit-line-clamp:unset!important;
+      -webkit-box-orient:unset!important;
+      overflow-wrap:anywhere!important;
+    }
+    html body #injuriesPanel td:nth-child(6) .risk{display:none!important} /* Etiqueta: show actual label text, not a yes/no pill. */
+    html body #injuriesPanel td:nth-child(6) .muted{display:block!important}
+  }
+</style>
   <div class="shell">
     <aside>
       <div class="brand">
