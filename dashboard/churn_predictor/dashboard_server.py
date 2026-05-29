@@ -18,7 +18,8 @@ sys.path.append('/opt/cfmpo-client-profiles')
 from client_profiles import add_note, get_profile, upsert_client
 
 from .config import ROOT, load_settings
-from .injuries import attach_injuries, load_beta_injuries, load_db_injuries, load_deleted_db_injuries, load_injuries
+from .injuries import attach_injuries, attach_tariffs_to_injuries, load_beta_injuries, load_db_injuries, load_deleted_db_injuries, load_injuries
+from .local_data import load_signals
 from .inactivity import load_inactive_members_cache, refresh_inactive_members
 from .tariff_completions import load_tariff_completions_cache, refresh_tariff_completions
 from . import ghl as ghl_mod
@@ -54,6 +55,7 @@ def dashboard_payload() -> dict:
     deleted_injuries = load_deleted_db_injuries()
     beta_injuries = load_beta_injuries(settings.injuries_sheet_url)
     injuries = db_injuries or beta_injuries or legacy_injuries
+    injuries = attach_tariffs_to_injuries(injuries, load_signals(settings.data_dir))
     rows, linked_injuries = attach_injuries(rows, injuries)
     seed_client_profiles(rows, injuries, report.generated_at)
     high = [row for row in rows if row.get("riesgo") == "Alto"]
@@ -2282,6 +2284,7 @@ INDEX_HTML = r"""<!doctype html>
         <div class="profile-mini"><span>Email</span><strong id="profileEmail">—</strong></div>
         <div class="profile-mini"><span>Centro</span><strong id="profileCenter">—</strong></div>
         <div class="profile-mini"><span>ID externo</span><strong id="profileExternal">—</strong></div>
+        <div class="profile-mini"><span>Tarifa</span><strong id="profileTariff">—</strong></div>
       </div>
       <details class="profile-injury-edit" id="profileInjuryEdit" hidden>
         <summary>Editar lesión</summary>
@@ -2539,7 +2542,7 @@ INDEX_HTML = r"""<!doctype html>
     }
     function injuryClient(item) {
       const match = findClientIdentityMatch(item);
-      return { name: item.name || match.name || '', phone: item.phone || match.phone || '', email: item.email || match.email || '', center: item.center || match.center || '', external_id: item.external_id || match.external_id || '', registry_id: item.registro_id || item.registry_id || '', injury_type: item.type || item.injury_type || '', injury_label: item.label || '', injury_description: item.description || '', source: 'risk-lesionados' };
+      return { name: item.name || match.name || '', phone: item.phone || match.phone || '', email: item.email || match.email || '', center: item.center || match.center || '', external_id: item.external_id || match.external_id || '', registry_id: item.registro_id || item.registry_id || '', injury_type: item.type || item.injury_type || '', injury_label: item.label || '', injury_description: item.description || '', membership_name: item.membership_name || item.tariff || '', tariff: item.tariff || item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', source: 'risk-lesionados' };
     }
     function clientDataAttr(data) {
       const enriched = { ...data, client_key: clientKey(data) };
@@ -2639,7 +2642,7 @@ INDEX_HTML = r"""<!doctype html>
         <tr>
           <td><span class="risk Bajo">${safe(item.center || '')}</span></td>
           <td><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><div class="muted">${safe(daysText(item.days_remaining))}</div></td>
-          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><span>${safe(item.phone || '')}</span><span>${safe(item.label || 'Sin etiqueta')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
+          <td><button class="client-link" type="button" data-client='${clientDataAttr(injuryClient(item))}'>${safe(item.name)}</button><div class="contact">${safe(item.phone)}${ghlButton(item.phone)}</div><div class="muted">${safe(item.membership_name || item.tariff || 'Sin tarifa detectada')}</div><div class="mobile-injury-summary"><div class="mobile-meta"><span class="risk ${statusClass(item.status)}">${safe(item.status)}</span><span>${safe(item.phone || '')}</span><span>${safe(item.membership_name || item.tariff || 'Sin tarifa')}</span><span>${safe(formatDateEs(item.next_contact) || 'Sin fecha')}</span></div><div class="mobile-desc">${safe(item.description || '')}</div><div class="mobile-note">${safe(item.latest_note || '')}</div></div></td>
           <td>${safe(item.type || '')}</td>
           <td><span class="risk ${item.label ? 'Bajo' : 'Sin.fecha'}">${item.label ? 'Sí' : 'No'}</span><div class="muted">${safe(item.label || 'Sin etiqueta')}</div></td>
           <td><div class="name">${safe(item.description || '')}</div></td>
@@ -2956,6 +2959,7 @@ INDEX_HTML = r"""<!doctype html>
       $('profileEmail').textContent = client.email || '—';
       $('profileCenter').textContent = client.center || '—';
       $('profileExternal').textContent = client.external_id || '—';
+      $('profileTariff').textContent = client.membership_name || client.tariff || '—';
       const injuryEdit = $('profileInjuryEdit');
       const registryId = client.registry_id || currentProfileClient?.registry_id || '';
       injuryEdit.hidden = !registryId;

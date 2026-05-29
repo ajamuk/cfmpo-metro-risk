@@ -7,7 +7,9 @@ import unicodedata
 import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
+
+from .local_data import SignalIndex
 
 
 def load_injuries(sheet_url: str, sheet_name: str, center: str | None = None) -> List[dict]:
@@ -164,6 +166,28 @@ def attach_injuries(active_rows: List[dict], injuries: List[dict]) -> tuple[List
     return active_rows, linked
 
 
+def attach_tariffs_to_injuries(injuries: List[dict], signals_index: SignalIndex) -> List[dict]:
+    """Enrich standalone injury rows with the latest tariff detected in billing/local CSVs."""
+    out: List[dict] = []
+    for item in injuries:
+        enriched = dict(item)
+        signal = signals_index.find(
+            client_id=str(enriched.get("external_id") or enriched.get("id") or ""),
+            email=str(enriched.get("email") or ""),
+            phone=str(enriched.get("phone") or ""),
+            name=str(enriched.get("name") or ""),
+        )
+        if signal.membership_name:
+            enriched["tariff"] = signal.membership_name
+            enriched["membership_name"] = signal.membership_name
+        if signal.last_membership_payment_date:
+            enriched["last_membership_payment_date"] = signal.last_membership_payment_date.isoformat()
+        if signal.weekly_average is not None:
+            enriched["weekly_average"] = signal.weekly_average
+        out.append(enriched)
+    return out
+
+
 def norm_phone(value: str) -> str:
     return re.sub(r"\D+", "", str(value or ""))
 
@@ -243,4 +267,3 @@ def _latest_note(row: dict) -> str:
         if value:
             notes.append(value)
     return notes[-1] if notes else ""
-

@@ -40,13 +40,28 @@ class SignalIndex:
         ):
             if key and key in mapping:
                 return mapping[key]
+        partial_name = _find_partial_name(_norm_name(name), self.by_name)
+        if partial_name:
+            return partial_name
         return LocalSignals()
+
+
+def _find_partial_name(name: str, mapping: Dict[str, LocalSignals]) -> Optional[LocalSignals]:
+    tokens = [token for token in str(name or "").split() if len(token) > 2]
+    if len(tokens) < 2:
+        return None
+    candidates = []
+    for key, signal in mapping.items():
+        key_tokens = set(str(key or "").split())
+        if all(token in key_tokens for token in tokens):
+            candidates.append(signal)
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def load_signals(data_dir: Path) -> SignalIndex:
     signals: Dict[str, LocalSignals] = {}
     index = SignalIndex(by_id=signals, by_email={}, by_phone={}, by_name={})
-    _load_memberships(data_dir / "tarifas.csv", signals)
+    _load_memberships(data_dir / "tarifas.csv", index)
     _load_payments(data_dir / "pagos.csv", index)
     _load_payments(data_dir / "pagos_getafe.csv", index)
     _load_payments(data_dir / "pagos_parla.csv", index)
@@ -59,15 +74,47 @@ def _signal(signals: Dict[str, LocalSignals], client_id: str) -> LocalSignals:
     return signals.setdefault(client_id, LocalSignals())
 
 
-def _load_memberships(path: Path, signals: Dict[str, LocalSignals]) -> None:
+def _load_memberships(path: Path, index: SignalIndex) -> None:
     for row in _read_csv(path):
         client_id = _first(row, "id", "cliente_id", "client_id", "ID")
-        if not client_id:
+        signal = _member_signal(index, row)
+        if not signal and not client_id:
             continue
-        signal = _signal(signals, client_id)
-        signal.membership_name = _first(row, "tarifa", "membership", "membership_name", "Tarifa")
+        if signal is None:
+            signal = _signal(index.by_id, client_id)
+        tariff = _first(row, "tarifa", "membership", "membership_name", "Tarifa", "Tarifas activas")
+        if tariff:
+            signal.membership_name = tariff
+        paid_at = _to_date(_first(row, "inicio de la tarifa", "Inicio de la tarifa", "fecha", "Fecha"))
+        if paid_at and (signal.last_membership_payment_date is None or paid_at > signal.last_membership_payment_date):
+            signal.last_membership_payment_date = paid_at
         weekly = _first(row, "media_semanal", "weekly_average", "Media Semanal")
-        signal.weekly_average = _to_float(weekly)
+        parsed_weekly = _to_float(weekly)
+        if parsed_weekly is not None:
+            signal.weekly_average = parsed_weekly
+        if client_id:
+            index.by_id[str(client_id).strip()] = signal
+
+
+def _member_signal(index: SignalIndex, row: dict) -> Optional[LocalSignals]:
+    email = _norm_email(_first(row, "correo electronico", "correo electrónico", "email", "Correo electrónico"))
+    phone = _norm_phone(_first(row, "telefono movil", "teléfono móvil", "mobile", "Teléfono móvil", "teléfonos", "telefonos", "Teléfonos"))
+    name = _norm_name(_first(row, "cliente", "name", "Cliente", "nombre y apellidos", "Nombre y apellidos"))
+    signal = None
+    for key, mapping in ((email, index.by_email), (phone, index.by_phone), (name, index.by_name)):
+        if key and key in mapping:
+            signal = mapping[key]
+            break
+    if signal is None and (email or phone or (name and name != "sin definir")):
+        signal = LocalSignals()
+    if signal is not None:
+        if email:
+            index.by_email[email] = signal
+        if phone:
+            index.by_phone[phone] = signal
+        if name and name != "sin definir":
+            index.by_name[name] = signal
+    return signal
 
 
 def _load_payments(path: Path, index: SignalIndex) -> None:
