@@ -2687,7 +2687,7 @@ INDEX_HTML = r"""<!doctype html>
       }).join('');
     }
     function inactiveClient(item) {
-      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', source: 'inactividad-aimharder' };
+      return { name: item.name || '', phone: item.phone || '', email: item.email || '', center: item.center || '', external_id: item.id || '', membership_name: item.membership_name || '', tariff: item.membership_name || '', last_membership_payment_date: item.last_membership_payment_date || '', source: 'inactividad-aimharder' };
     }
     function inactiveDaysText(value) {
       if (value === null || value === undefined || value === '') return 'sin clase registrada';
